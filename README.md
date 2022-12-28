@@ -1,2 +1,2 @@
-# python_vignettes
-Templates, snippets of code, and use cases to help code in Python
+# python
+Templates, snippets of code, use cases, and tools to help code in Python
