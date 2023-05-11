@@ -1,0 +1,98 @@
+---
+title: "Running Python with Rmd Files on RStudio"
+author: "Oscar A. Trevizo"
+date: "`r Sys.Date()`"
+output: 
+  html_document: 
+    keep_md: yes
+  pdf_document: 
+    toc: yes
+    number_sections: yes
+---
+
+```{r setup, include=FALSE, warning=FALSE, message = FALSE}
+# Message false to remove all warnings when loading libraries.
+knitr::opts_chunk$set(echo = TRUE)
+library(reticulate)
+use_python("/Users/trevizo/Anaconda3/python.exe")
+matplotlib <- import("matplotlib")
+matplotlib$use("Agg", force = TRUE)
+#knitr::knit_engines$set(python = reticulate::eng_python)
+
+```
+
+
+# Python code
+
+In RStudio modify the keyboard shortcuts to automatically insert a Python new chunk.
+
+Tools >> Modify Keyboard Shortcuts... >> Find Chunk... Click in the middle cell end enter your favorite keyboard sequence.
+
+I used _Ctrl-Alt-p_ (i.e., lower case p)
+
+# Libraries
+
+```{python libraries, include=FALSE, warning=FALSE, message = FALSE}
+# Message false to remove all warnings when loading libraries.
+
+import pandas as pd
+import numpy as np
+import numpy.random as nr
+import seaborn as sns
+import matplotlib.pyplot as plt
+
+import statsmodels.api as sm
+from math import log, sqrt
+from math import log, sqrt, sin
+from sklearn.preprocessing import PowerTransformer
+from sklearn.datasets import load_diabetes
+
+# If you are using Rmd for Python it is likely that you also program in R, like me.
+# https://rpy2.github.io/doc/latest/html/index.html
+# So it may come handy to do some mix of Python and R, and be able to use data from ISLR for example.
+# Preinstall rpy2 with conda (r pip)
+# >>> conda install -c r rpy2
+# Difficult to install, worth trying.
+
+```
+
+
+```{python}
+print('hello, world')
+```
+# Load data sunspots from statsmodels
+
+```{python}
+sunspots_data = sm.datasets.sunspots.load_pandas().data
+sunspots_data.head()
+
+```
+
+# Print a time series
+
+```{python}
+fig, ax = plt.subplots(figsize=(12, 12))
+fig.subplots_adjust(bottom=0.3)
+ax = sns.lineplot(x='YEAR', y='SUNACTIVITY', data=sunspots_data, ci=None, ax=ax)
+_=ax.set_title('Sunspot time series with 1:1 aspect ratio', fontsize=24)
+_=ax.set_xlabel('Date', fontsize=20)
+_=ax.set_ylabel('Sunspots', fontsize=20)
+_=ax.tick_params(labelsize=18)
+plt.show()
+```
+
+
+# Print a time series, different proportions
+
+```{python, fig.width=8, fig.height=4, fig.align="center"}
+fig, ax = plt.subplots(figsize=(20, 1))
+fig.subplots_adjust(bottom=0.4,top=0.7)
+ax = sns.lineplot(x='YEAR', y='SUNACTIVITY', data=sunspots_data, ci=None, ax=ax)
+_=ax.set_title('Sunspot time series with 20:1 aspect ratio', fontsize=24)
+_=ax.set_xlabel('Date', fontsize=20)
+_=ax.set_ylabel('Sunspots', fontsize=20)
+_=ax.tick_params(labelsize=18)
+plt.show()
+```
+
+
