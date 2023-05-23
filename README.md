@@ -1,2 +1,2 @@
 # python
-Templates, snippets of code, use cases, and tools to help code in Python
+Vignettes, use cases, toolbox, and datasets to help me when I code in Python.
