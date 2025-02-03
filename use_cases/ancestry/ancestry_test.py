@@ -2,7 +2,14 @@
 """
 Created on Mon Feb  3 10:17:06 2025
 
-@author: trevizo
+@author: otrevizo
+ancestry_project/
+│── ancestry_db.py              # Handles database interactions (this class)
+│── ancestry_main.py            # Entry point for running operations
+│── ancestry_inspect.py         # Print tables
+│── ancestry_tests.py           # Unit tests for database functions
+│── ancestry_export_xlsx.py     # Write db to Excel file
+
 """
 
 import logging
