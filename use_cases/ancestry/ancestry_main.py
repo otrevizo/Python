@@ -4,6 +4,8 @@ Created on Mon Feb  3 14:49:59 2025
 
 @author: otrevizo
 
+ancestry_main.py
+
 ancestry_project/
 │── ancestry_db.py              # Handles database interactions (this class)
 │── ancestry_main.py            # Entry point for running operations
