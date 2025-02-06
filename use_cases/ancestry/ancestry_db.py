@@ -71,8 +71,8 @@ class AncestryDatabase:
                     birth_date TEXT,
                     place_of_birth TEXT,
                     nationality TEXT,
-                    mother_id INTEGER,
                     father_id INTEGER,
+                    mother_id INTEGER,
                     occupation TEXT,
                     residence TEXT,
                     death_date TEXT,
@@ -91,8 +91,8 @@ class AncestryDatabase:
 
     def add_person(self, first_name: str, middle_name: str, last_name: str, 
                     birth_date: Optional[str] = None, place_of_birth: Optional[str] = None, 
-                    nationality: Optional[str] = None, mother_id: Optional[int] = None, 
-                    father_id: Optional[int] = None, occupation: Optional[str] = None, 
+                    nationality: Optional[str] = None, father_id: Optional[int] = None, 
+                    mother_id: Optional[int] = None, occupation: Optional[str] = None, 
                     residence: Optional[str] = None, death_date: Optional[str] = None, 
                     death_place: Optional[str] = None, cause_of_death: Optional[str] = None, 
                     notes: Optional[str] = None) -> Optional[int]:
@@ -100,11 +100,11 @@ class AncestryDatabase:
         try:
             self.cursor.execute('''
                 INSERT INTO People (first_name, middle_name, last_name, birth_date, place_of_birth, 
-                                      nationality, mother_id, father_id, occupation, residence, 
+                                      nationality, father_id, mother_id, occupation, residence, 
                                       death_date, death_place, cause_of_death, notes) 
                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             ''', (first_name, middle_name, last_name, birth_date, place_of_birth, nationality, 
-                   mother_id, father_id, occupation, residence, death_date, death_place, 
+                   father_id, mother_id, occupation, residence, death_date, death_place, 
                    cause_of_death, notes))
             self.conn.commit()
             logging.info(f"Person '{first_name} {middle_name} {last_name}' added successfully.")
