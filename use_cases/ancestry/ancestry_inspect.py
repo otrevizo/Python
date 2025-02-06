@@ -49,6 +49,6 @@ def show_table_contents(table_name):
 if __name__ == "__main__":
     list_tables()
 
-    tables = ["People", "Relationships"]
+    tables = ["People"]
     for table in tables:
         show_table_contents(table)

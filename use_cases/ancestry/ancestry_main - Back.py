@@ -29,27 +29,26 @@ db.create_tables()
 
 # Main execution function
 def main():
-    try:
-        df_people = db.read_input_file(INPUT_FILE)
-        
-        if df_people is not None:
-            print("df_people columns:", df_people.columns)
-            
-            df_db_people = db.fetch_existing_data()
-            
-            changes_log = db.compare_and_update(df_people, df_db_people)
-            
-            if changes_log:
-                print("Changes made:")
-                for log in changes_log:
-                    print(log)
-            else:
-                print("No changes detected.")
-        
-        db.archive_input_file(INPUT_FILE)
+    # Configure logging
+    logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
+
+    df_people, df_relationships = db.read_input_file(INPUT_FILE)
+    if df_people is None or df_relationships is None:
+        return
     
-    finally:
-        db.close()
+    df_db_people, df_db_relationships = db.fetch_existing_data()
+    
+    changes_log = db.compare_and_update(df_people, df_relationships, df_db_people, df_db_relationships)
+    
+    if changes_log:
+        print("Changes made:")
+        for log in changes_log:
+            print(log)
+    else:
+        print("No changes detected.")
+    
+    db.archive_input_file(INPUT_FILE)
 
 if __name__ == "__main__":
     main()
+

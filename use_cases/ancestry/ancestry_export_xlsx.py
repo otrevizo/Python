@@ -29,7 +29,6 @@ def export_to_excel():
     
     # Read data from tables
     people_df = pd.read_sql_query("SELECT * FROM People", conn)
-    relationships_df = pd.read_sql_query("SELECT * FROM Relationships", conn)
     
     # Close the connection
     conn.close()
@@ -37,7 +36,6 @@ def export_to_excel():
     # Write data to an Excel file
     with pd.ExcelWriter(EXCEL_FILE, engine="openpyxl") as writer:
         people_df.to_excel(writer, sheet_name="People", index=False)
-        relationships_df.to_excel(writer, sheet_name="Relationships", index=False)
     
     print(f"Data exported successfully to {EXCEL_FILE}")
 
