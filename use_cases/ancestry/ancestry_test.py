@@ -30,8 +30,8 @@ antonio_veneziano = db.add_person(
     "1935-05-22",  
     "Philadelphia",  
     "Italian-American",  
-    None,  # mother_id
     None,  # father_id
+    None,  # mother_id
     None,  # occupation
     None,  # residence
     None,  # death_date
@@ -46,8 +46,8 @@ maria_mancini = db.add_person(
     "1937-11-09",  
     "New York City",  
     "Italian-American",  
-    None,  # mother_id
     None,  # father_id
+    None,  # mother_id
     None,  # occupation
     None,  # residence
     None,  # death_date
@@ -64,8 +64,8 @@ paolo_veneziano = db.add_person(
     "1905-08-20",  
     "Italy",  
     "Italian",  
-    None,  # mother_id
     None,  # father_id
+    None,  # mother_id
     None,  # occupation
     None,  # residence
     None,  # death_date
@@ -80,8 +80,8 @@ rosa_conti = db.add_person(
     "1908-04-10",  
     "Italy",  
     "Italian",  
-    None,  # mother_id
     None,  # father_id
+    None,  # mother_id
     None,  # occupation
     None,  # residence
     None,  # death_date
@@ -96,8 +96,8 @@ angelo_mancini = db.add_person(
     "1906-12-05",  
     "USA",  
     "Italian-American",  
-    None,  # mother_id
     None,  # father_id
+    None,  # mother_id
     None,  # occupation
     None,  # residence
     None,  # death_date
@@ -112,8 +112,8 @@ teresa_ricci = db.add_person(
     "1909-09-14",  
     "USA",  
     "Italian-American",  
-    None,  # mother_id
     None,  # father_id
+    None,  # mother_id
     None,  # occupation
     None,  # residence
     None,  # death_date
@@ -130,8 +130,8 @@ giovanni_veneziano = db.add_person(
     "1880-06-15",  
     "Italy",  
     "Italian",  
-    None,  # mother_id
     None,  # father_id
+    None,  # mother_id
     None,  # occupation
     None,  # residence
     None,  # death_date
@@ -146,8 +146,8 @@ anna_russo = db.add_person(
     "1882-09-21",  
     "Italy",  
     "Italian",  
-    None,  # mother_id
     None,  # father_id
+    None,  # mother_id
     None,  # occupation
     None,  # residence
     None,  # death_date
@@ -162,8 +162,8 @@ giuseppe_mancini = db.add_person(
     "1878-11-03",  
     "Italy",  
     "Italian",  
-    None,  # mother_id
     None,  # father_id
+    None,  # mother_id
     None,  # occupation
     None,  # residence
     None,  # death_date
@@ -178,8 +178,8 @@ luisa_ferrara = db.add_person(
     "1881-07-12",  
     "USA",  
     "American",  
-    None,  # mother_id
     None,  # father_id
+    None,  # mother_id
     None,  # occupation
     None,  # residence
     None,  # death_date
@@ -194,8 +194,8 @@ marco_ricci = db.add_person(
     "1879-05-30",  
     "Italy",  
     "Italian",  
-    None,  # mother_id
     None,  # father_id
+    None,  # mother_id
     None,  # occupation
     None,  # residence
     None,  # death_date
@@ -210,8 +210,8 @@ caterina_bianchi = db.add_person(
     "1883-02-17",  
     "Italy",  
     "Italian",  
-    None,  # mother_id
     None,  # father_id
+    None,  # mother_id
     None,  # occupation
     None,  # residence
     None,  # death_date
@@ -226,8 +226,8 @@ francesco_conti = db.add_person(
     "1885-01-20",  
     "Italy",  
     "Italian",  
-    None,  # mother_id
     None,  # father_id
+    None,  # mother_id
     None,  # occupation
     None,  # residence
     None,  # death_date
@@ -242,8 +242,8 @@ elisabetta_rosati = db.add_person(
     "1887-06-10",  
     "Italy",  
     "Italian",  
-    None,  # mother_id
     None,  # father_id
+    None,  # mother_id
     None,  # occupation
     None,  # residence
     None,  # death_date
