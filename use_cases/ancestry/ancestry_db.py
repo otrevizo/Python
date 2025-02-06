@@ -2,7 +2,7 @@
 """
 Created on Tue Feb  4 10:27:04 2025
 
-@author: trevizo
+@author: otrevizo
 """
 
 # -*- coding: utf-8 -*-
@@ -210,42 +210,86 @@ class AncestryDatabase:
         """Retrieves a person by their ID."""
         self.cursor.execute('SELECT * FROM People WHERE person_id = ?', (person_id,))
         return self.cursor.fetchone()
+
+    def get_ancestry(self, person_id: int) -> List[Tuple[int, str, str]]:
+        """
+        Retrieves the ancestry for a given person.
     
-    def get_family_tree(self, person_id: int) -> List[Tuple[int, str, str, str]]:
-        """Retrieves all relationships for a given person."""
-        # Get parents
+        Args:
+            person_id (int): The ID of the person to retrieve ancestry for.
+    
+        Returns:
+            List[Tuple[int, str, str]]: A list of tuples containing the person ID, name, and relationship.
+        """
+        ancestry = []
+        to_process = [(person_id, 0)]  # Initialize list with person ID and generation
+        while to_process:
+            current_id, generation = to_process.pop(0)
+            person = self.get_person_by_id(current_id)  # Pass current_id directly
+            if person:
+                name = f"{person[1]} {person[3]}"
+                ancestry.append((current_id, name, f"Generation -{generation}"))
+                # Get parents
+                father_id, mother_id = person[8], person[9]
+                if father_id:
+                    to_process.append((father_id, generation + 1))
+                if mother_id:
+                    to_process.append((mother_id, generation + 1))
+        return ancestry
+    
+    def get_family_tree(self, person_id: int, depth: int = 0, max_depth: int = 5, role: str = "Self", added_person_ids: Optional[set] = None) -> List[Tuple[int, str, str]]:
+        if added_person_ids is None:
+            added_person_ids = set()
+        if person_id in added_person_ids or depth > max_depth:
+            return []  # Prevent infinite recursion
+        added_person_ids.add(person_id)
+    
+        family_tree = [(person_id, self.get_person_name(person_id), role)]
+    
+        # Fetch parents
+        parents = self.get_parents(person_id)
+        for parent_id, parent_name, parent_role in parents:
+            if parent_id != person_id and parent_id not in added_person_ids:
+                family_tree.extend(self.get_family_tree(parent_id, depth + 1, max_depth, parent_role, added_person_ids))
+    
+        # Fetch children
+        children = self.get_children(person_id)
+        for child_id, child_name, child_role in children:
+            if child_id != person_id and child_id not in added_person_ids:
+                family_tree.extend(self.get_family_tree(child_id, depth + 1, max_depth, child_role, added_person_ids))
+    
+        return family_tree
+
+    def get_parents(self, person_id: int) -> List[Tuple[int, str, str]]:
         self.cursor.execute('''
-            SELECT person_id, first_name, last_name, 
-                   CASE 
-                       WHEN mother_id = ? THEN 'Mother'
-                       WHEN father_id = ? THEN 'Father'
-                   END
-            FROM People
-            WHERE person_id = mother_id OR person_id = father_id
-        ''', (person_id, person_id))
+            SELECT mother_id, father_id 
+            FROM People 
+            WHERE person_id = ?
+        ''', (person_id,))
+        parents = self.cursor.fetchone()
+        result = []
+        if parents:
+            if parents[0]:
+                result.append((parents[0], self.get_person_name(parents[0]), "Parent"))
+            if parents[1]:
+                result.append((parents[1], self.get_person_name(parents[1]), "Parent"))
+        return result
     
-        parents = self.cursor.fetchall()
     
-        # Get children
+    def get_children(self, person_id: int) -> List[Tuple[int, str, str]]:
         self.cursor.execute('''
-            SELECT person_id, first_name, last_name, 'Child'
-            FROM People
+            SELECT person_id 
+            FROM People 
             WHERE mother_id = ? OR father_id = ?
         ''', (person_id, person_id))
-    
         children = self.cursor.fetchall()
+        return [(child[0], self.get_person_name(child[0]), "Child") for child in children]
     
-        # Get siblings
-        self.cursor.execute('''
-            SELECT p2.person_id, p2.first_name, p2.last_name, 'Sibling'
-            FROM People p1
-            JOIN People p2 ON p1.mother_id = p2.mother_id AND p1.father_id = p2.father_id
-            WHERE p1.person_id = ? AND p2.person_id != ?
-        ''', (person_id, person_id))
-    
-        siblings = self.cursor.fetchall()
-    
-        return parents + children + siblings    
+    def get_person_name(self, person_id: int) -> str:
+        """Helper method to get a person's full name by their ID."""
+        self.cursor.execute('SELECT first_name, last_name FROM People WHERE person_id = ?', (person_id,))
+        person = self.cursor.fetchone()
+        return f"{person[0]} {person[1]}" if person else "Unknown"
 
     @staticmethod
     def export_to_excel(db_name: str = "ancestry.db", excel_file: str = "ancestry_export.xlsx"):
