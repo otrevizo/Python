@@ -84,6 +84,17 @@ class AncestryDatabase:
                     FOREIGN KEY(father_id) REFERENCES People(person_id) ON DELETE SET NULL
                 )
             ''')
+            cursor.execute('''
+                CREATE TABLE IF NOT EXISTS Relationships (
+                    relationship_id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    person1_id INTEGER,
+                    person2_id INTEGER,
+                    relationship_type TEXT,
+                    UNIQUE(person1_id, person2_id, relationship_type),
+                    FOREIGN KEY(person1_id) REFERENCES People(person_id) ON DELETE CASCADE,
+                    FOREIGN KEY(person2_id) REFERENCES People(person_id) ON DELETE CASCADE
+                )
+            ''')
             self.conn.commit()
             logging.info("Tables created successfully.")
         except sqlite3.Error as e:
@@ -112,12 +123,26 @@ class AncestryDatabase:
         except sqlite3.Error as e:
             logging.error(f"Error adding person: {e}")
             return None    
+        def add_relationship(self, person1_id: int, person2_id: int, relationship_type: str) -> None:
+            """Adds a relationship between two people."""
+            try:
+                self.cursor.execute('''
+                    INSERT INTO Relationships (person1_id, person2_id, relationship_type) 
+                    VALUES (?, ?, ?)
+                ''', (person1_id, person2_id, relationship_type))
+                self.conn.commit()
+                logging.info(f"Relationship added successfully.")
+            except sqlite3.IntegrityError:
+                logging.warning("Duplicate relationship detected.")
+            except sqlite3.Error as e:
+                logging.error(f"Error adding relationship: {e}")
     
         def fetch_existing_data(self) -> Tuple[pd.DataFrame, pd.DataFrame]:
-            """Fetch existing data from People table."""
+            """Fetch existing data from People and Relationships tables."""
             self.ensure_connection()
             df_people = pd.read_sql_query("SELECT * FROM People", self.conn)
-            return df_people
+            df_relationships = pd.read_sql_query("SELECT * FROM Relationships", self.conn)
+            return df_people, df_relationships
     
         @staticmethod
         def parse_date(value: Optional[str]) -> Optional[str]:
@@ -136,21 +161,24 @@ class AncestryDatabase:
     
         @staticmethod
         def export_to_excel(db_name: str = "ancestry.db", excel_file: str = "ancestry_export.xlsx"):
-            """Export the People table to an Excel file."""
+            """Export the People and Relationships tables to an Excel file."""
             conn = sqlite3.connect(db_name)
             people_df = pd.read_sql_query("SELECT * FROM People", conn)
+            relationships_df = pd.read_sql_query("SELECT * FROM Relationships", conn)
             conn.close()
             
             with pd.ExcelWriter(excel_file, engine="openpyxl") as writer:
                 people_df.to_excel(writer, sheet_name="People", index=False)
+                relationships_df.to_excel(writer, sheet_name="Relationships", index=False)
             logging.info(f"Data exported successfully to {excel_file}")
     
         @staticmethod
         def read_input_file(input_file: str) -> Tuple[pd.DataFrame, pd.DataFrame]:
-            """Reads input Excel file and returns People dataframe."""
+            """Reads input Excel file and returns People and Relationships dataframes."""
             try:
                 df_people = pd.read_excel(input_file, sheet_name="People")
-                return df_people
+                df_relationships = pd.read_excel(input_file, sheet_name="Relationships")
+                return df_people, df_relationships
             except Exception as e:
                 logging.error(f"Error reading {input_file}: {e}")
                 return pd.DataFrame(), pd.DataFrame()
@@ -163,17 +191,29 @@ class AncestryDatabase:
             os.rename(input_file, new_name)
             logging.info(f"Renamed {input_file} to {new_name}")
 
+    def add_relationship(self, person1_id: int, person2_id: int, relationship_type: str) -> None:
+        """Adds a relationship between two people."""
+        try:
+            self.cursor.execute('''
+                INSERT INTO Relationships (person1_id, person2_id, relationship_type) 
+                VALUES (?, ?, ?)
+            ''', (person1_id, person2_id, relationship_type))
+            self.conn.commit()
+            logging.info(f"Relationship '{relationship_type}' added between {person1_id} and {person2_id}.")
+        except sqlite3.IntegrityError:
+            logging.warning(f"Duplicate relationship: {person1_id} - {relationship_type} - {person2_id}.")
+        except sqlite3.Error as e:
+            logging.error(f"Error adding relationship: {e}")
+
     def fetch_existing_data(self):
-        """Fetch existing data from People table."""
+        """Fetch existing data from People and Relationships tables."""
         self.connect()
         df_people = pd.read_sql_query("SELECT * FROM People", self.conn)
+        df_relationships = pd.read_sql_query("SELECT * FROM Relationships", self.conn)
         self.close()
-        return df_people
+        return df_people, df_relationships
     
-    def compare_and_update(self, 
-                           df_people, 
-                           df_db_people
-                           ):
+    def compare_and_update(self, df_people, df_relationships, df_db_people, df_db_relationships):
         """Compare and update the database based on differences in the input data."""
         self.connect()
         cursor = self.conn.cursor()
@@ -201,7 +241,24 @@ class AncestryDatabase:
                 insert_query = f"INSERT INTO People ({columns}) VALUES ({placeholders})"
                 cursor.execute(insert_query, tuple([x.item() if isinstance(x, np.ndarray) else x for x in row.values]))
                 changes_log.append(f"Added Person: {row['person_id']}")
-        
+    
+        # Process Relationships sheet
+        for _, row in df_relationships.iterrows():
+            existing_relationship = df_db_relationships[(df_db_relationships["person1_id"] == row["person1_id"]) & 
+                                                     (df_db_relationships["person2_id"] == row["person2_id"]) &
+                                                     (df_db_relationships["relationship_type"] == row["relationship_type"])]
+            if not existing_relationship.empty:
+                # Relationship exists, check for changes (currently not implemented)
+                # ... (Add logic to check and update relationship attributes if needed) ...
+                pass 
+            else:
+                # Add new relationship
+                cursor.execute(
+                    "INSERT INTO Relationships (person1_id, person2_id, relationship_type) VALUES (?, ?, ?)",
+                    (row["person1_id"], row["person2_id"], row["relationship_type"])
+                )
+                changes_log.append(f"Added Relationship: {row['person1_id']} - {row['relationship_type']} - {row['person2_id']}")
+    
         self.conn.commit()
         self.close()
         return changes_log
@@ -210,52 +267,28 @@ class AncestryDatabase:
         """Retrieves a person by their ID."""
         self.cursor.execute('SELECT * FROM People WHERE person_id = ?', (person_id,))
         return self.cursor.fetchone()
-    
+
     def get_family_tree(self, person_id: int) -> List[Tuple[int, str, str, str]]:
         """Retrieves all relationships for a given person."""
-        # Get parents
         self.cursor.execute('''
-            SELECT person_id, first_name, last_name, 
-                   CASE 
-                       WHEN mother_id = ? THEN 'Mother'
-                       WHEN father_id = ? THEN 'Father'
-                   END
-            FROM People
-            WHERE person_id = mother_id OR person_id = father_id
-        ''', (person_id, person_id))
-    
-        parents = self.cursor.fetchall()
-    
-        # Get children
-        self.cursor.execute('''
-            SELECT person_id, first_name, last_name, 'Child'
-            FROM People
-            WHERE mother_id = ? OR father_id = ?
-        ''', (person_id, person_id))
-    
-        children = self.cursor.fetchall()
-    
-        # Get siblings
-        self.cursor.execute('''
-            SELECT p2.person_id, p2.first_name, p2.last_name, 'Sibling'
-            FROM People p1
-            JOIN People p2 ON p1.mother_id = p2.mother_id AND p1.father_id = p2.father_id
-            WHERE p1.person_id = ? AND p2.person_id != ?
-        ''', (person_id, person_id))
-    
-        siblings = self.cursor.fetchall()
-    
-        return parents + children + siblings    
+            SELECT p2.person_id, p2.first_name, p2.last_name, r.relationship_type 
+            FROM Relationships r
+            JOIN People p2 ON r.person2_id = p2.person_id
+            WHERE r.person1_id = ?
+        ''', (person_id,))
+        return self.cursor.fetchall()
 
     @staticmethod
     def export_to_excel(db_name: str = "ancestry.db", excel_file: str = "ancestry_export.xlsx"):
-        """Export the People table to an Excel file."""
+        """Export the People and Relationships tables to an Excel file."""
         conn = sqlite3.connect(db_name)
         people_df = pd.read_sql_query("SELECT * FROM People", conn)
+        relationships_df = pd.read_sql_query("SELECT * FROM Relationships", conn)
         conn.close()
 
         with pd.ExcelWriter(excel_file, engine="openpyxl") as writer:
             people_df.to_excel(writer, sheet_name="People", index=False)
+            relationships_df.to_excel(writer, sheet_name="Relationships", index=False)
         print(f"Data exported successfully to {excel_file}")
 
     @staticmethod
@@ -278,7 +311,8 @@ class AncestryDatabase:
         INPUT_FILE = input_file
         try:
             df_people = pd.read_excel(INPUT_FILE, sheet_name="People")
-            return df_people
+            df_relationships = pd.read_excel(INPUT_FILE, sheet_name="Relationships")
+            return df_people, df_relationships
         except Exception as e:
             print(f"Error reading {INPUT_FILE}: {e}")
             return None, None

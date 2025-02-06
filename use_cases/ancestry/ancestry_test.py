@@ -55,7 +55,6 @@ maria_mancini = db.add_person(
     None,  # cause_of_death
     None   # notes  
 )
-db.add_relationship(antonio_veneziano, maria_mancini, "spouse")
 
 # --- Parents of Antonio and Maria ---
 paolo_veneziano = db.add_person(
@@ -122,14 +121,6 @@ teresa_ricci = db.add_person(
     None,  # cause_of_death
     None   # notes  
 )
-
-# Add relationships between parents
-db.add_relationship(paolo_veneziano, rosa_conti, "spouse")
-db.add_relationship(angelo_mancini, teresa_ricci, "spouse")
-db.add_relationship(paolo_veneziano, antonio_veneziano, "parent")
-db.add_relationship(rosa_conti, antonio_veneziano, "parent")
-db.add_relationship(angelo_mancini, maria_mancini, "parent")
-db.add_relationship(teresa_ricci, maria_mancini, "parent")
 
 # --- Grandparents ---
 giovanni_veneziano = db.add_person(
@@ -261,20 +252,6 @@ elisabetta_rosati = db.add_person(
     None   # notes  
 )
 
-# Add relationships between grandparents
-db.add_relationship(giovanni_veneziano, anna_russo, "spouse")
-db.add_relationship(giuseppe_mancini, luisa_ferrara, "spouse")
-db.add_relationship(marco_ricci, caterina_bianchi, "spouse")
-db.add_relationship(francesco_conti, elisabetta_rosati, "spouse")
-db.add_relationship(giovanni_veneziano, paolo_veneziano, "parent")
-db.add_relationship(anna_russo, paolo_veneziano, "parent")
-db.add_relationship(francesco_conti, rosa_conti, "parent")
-db.add_relationship(elisabetta_rosati, rosa_conti, "parent")
-db.add_relationship(giuseppe_mancini, angelo_mancini, "parent")
-db.add_relationship(luisa_ferrara, angelo_mancini, "parent")
-db.add_relationship(marco_ricci, teresa_ricci, "parent")
-db.add_relationship(caterina_bianchi, teresa_ricci, "parent")
-
 # --- Children ---
 lucia_veneziano = db.add_person(
     "Lucia", 
@@ -324,13 +301,4 @@ marco_veneziano = db.add_person(
     None,  # cause_of_death
     None   # notes  
 )
-
-# Add relationships between children and parents
-db.add_relationship(antonio_veneziano, lucia_veneziano, "parent")
-db.add_relationship(maria_mancini, lucia_veneziano, "parent")
-db.add_relationship(antonio_veneziano, gianna_veneziano, "parent")
-db.add_relationship(maria_mancini, gianna_veneziano, "parent")
-db.add_relationship(antonio_veneziano, marco_veneziano, "parent")
-db.add_relationship(maria_mancini, marco_veneziano, "parent")
-
 

@@ -22,9 +22,6 @@ def clear_tables(db_name="ancestry.db"):
         # Clear the 'People' table
         cursor.execute("DELETE FROM People")
 
-        # Clear the 'Relationships' table
-        cursor.execute("DELETE FROM Relationships")
-
         conn.commit()
         conn.close()
         logging.info("Tables cleared successfully.")
