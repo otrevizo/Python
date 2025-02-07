@@ -213,13 +213,13 @@ class AncestryDatabase:
 
     def get_ancestry(self, person_id: int) -> List[Tuple[int, str, str]]:
         """
-        Retrieves the ancestry for a given person.
-    
+        Retrieves the ancestry for a given person, sorted by generation.
+        
         Args:
             person_id (int): The ID of the person to retrieve ancestry for.
-    
+        
         Returns:
-            List[Tuple[int, str, str]]: A list of tuples containing the person ID, name, and relationship.
+            List[Tuple[int, str, str]]: A sorted list of tuples containing the person ID, name, and relationship.
         """
         def get_generation_label(generation: int) -> str:
             """Returns the appropriate label for the given generation."""
@@ -232,10 +232,11 @@ class AncestryDatabase:
             elif generation == -3:
                 return "Great-Grandparent"
             else:
-                return f"{-generation - 2}th Great-Grandparent"
+                suffix = {1: "st", 2: "nd", 3: "rd"}.get(abs(generation + 2) % 10, "th")
+                return f"{abs(generation + 2)}{suffix} Great-Grandparent"
     
         ancestry = []
-        to_process = [(person_id, 0)]  # Initialize with person ID and generation 0
+        to_process = [(person_id, 0)]  # (person_id, generation)
     
         while to_process:
             current_id, generation = to_process.pop(0)
@@ -243,16 +244,20 @@ class AncestryDatabase:
             if person:
                 name = f"{person[1]} {person[3]}"  # Full name (first_name + last_name)
                 relation = get_generation_label(generation)
-                ancestry.append((current_id, name, relation))
+                ancestry.append((current_id, name, relation, generation))
     
-                # Add parents to process list with incremented generation
+                # Add parents with generation decremented
                 father_id, mother_id = person[8], person[9]
                 if father_id:
                     to_process.append((father_id, generation - 1))
                 if mother_id:
                     to_process.append((mother_id, generation - 1))
     
-        return ancestry
+        # Sort ancestry by the generation (the last element in each tuple)
+        ancestry.sort(key=lambda x: -x[3])
+    
+        # Remove the generation number before returning (to match the original format)
+        return [(person_id, name, relation) for person_id, name, relation, _ in ancestry]
 
     
     def get_family_tree(self, person_id: int, depth: int = 0, max_depth: int = 5, role: str = "Self", added_person_ids: Optional[set] = None) -> List[Tuple[int, str, str]]:
