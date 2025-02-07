@@ -221,39 +221,21 @@ class AncestryDatabase:
         Returns:
             List[Tuple[int, str, str]]: A list of tuples containing the person ID, name, and relationship.
         """
-        def get_generation_label(generation: int) -> str:
-            """Returns the appropriate label for the given generation."""
-            if generation == 0:
-                return "Yourself"
-            elif generation == -1:
-                return "Parent"
-            elif generation == -2:
-                return "Grandparent"
-            elif generation == -3:
-                return "Great-Grandparent"
-            else:
-                return f"{-generation - 2}th Great-Grandparent"
-    
         ancestry = []
-        to_process = [(person_id, 0)]  # Initialize with person ID and generation 0
-    
+        to_process = [(person_id, 0)]  # Initialize list with person ID and generation
         while to_process:
             current_id, generation = to_process.pop(0)
-            person = self.get_person_by_id(current_id)
+            person = self.get_person_by_id(current_id)  # Pass current_id directly
             if person:
-                name = f"{person[1]} {person[3]}"  # Full name (first_name + last_name)
-                relation = get_generation_label(generation)
-                ancestry.append((current_id, name, relation))
-    
-                # Add parents to process list with incremented generation
+                name = f"{person[1]} {person[3]}"
+                ancestry.append((current_id, name, f"Generation -{generation}"))
+                # Get parents
                 father_id, mother_id = person[8], person[9]
                 if father_id:
-                    to_process.append((father_id, generation - 1))
+                    to_process.append((father_id, generation + 1))
                 if mother_id:
-                    to_process.append((mother_id, generation - 1))
-    
+                    to_process.append((mother_id, generation + 1))
         return ancestry
-
     
     def get_family_tree(self, person_id: int, depth: int = 0, max_depth: int = 5, role: str = "Self", added_person_ids: Optional[set] = None) -> List[Tuple[int, str, str]]:
         if added_person_ids is None:
