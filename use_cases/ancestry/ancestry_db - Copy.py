@@ -57,12 +57,7 @@ class AncestryDatabase:
             self.connect()
 
     def create_tables(self) -> None:
-        """
-        Creates necessary tables if they do not exist.
-    
-        This method creates the `People` table with structured fields for birth, death, and residence locations,
-        including latitude and longitude for geospatial data.
-        """
+        """Creates necessary tables if they do not exist."""
         self.ensure_connection()
         try:
             cursor = self.conn.cursor()
@@ -74,27 +69,14 @@ class AncestryDatabase:
                     last_name TEXT NOT NULL,
                     maiden_name TEXT,
                     birth_date TEXT,
-                    birth_city TEXT,
-                    birth_state TEXT,
-                    birth_country_code TEXT,  -- ISO 3166-1 Alpha-3 (e.g., USA, ITA)
-                    birth_latitude REAL,
-                    birth_longitude REAL,
-                    death_date TEXT,
-                    death_city TEXT,
-                    death_state TEXT,
-                    death_country_code TEXT,
-                    death_latitude REAL,
-                    death_longitude REAL,
+                    place_of_birth TEXT,
                     nationality TEXT,
                     father_id INTEGER,
                     mother_id INTEGER,
                     occupation TEXT,
-                    residence_street TEXT,
-                    residence_city TEXT,
-                    residence_state TEXT,
-                    residence_country_code TEXT,
-                    residence_latitude REAL,
-                    residence_longitude REAL,
+                    residence TEXT,
+                    death_date TEXT,
+                    death_place TEXT,
                     cause_of_death TEXT,
                     notes TEXT,
                     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -103,57 +85,33 @@ class AncestryDatabase:
                 )
             ''')
             self.conn.commit()
-            logging.info("Tables created successfully with structured location fields.")
+            logging.info("Tables created successfully.")
         except sqlite3.Error as e:
             logging.error(f"Error creating tables: {e}")
 
     def add_person(self, first_name: str, middle_name: str, last_name: str, 
-                   birth_date: Optional[str] = None, birth_city: Optional[str] = None, 
-                   birth_state: Optional[str] = None, birth_country_code: Optional[str] = None, 
-                   birth_latitude: Optional[float] = None, birth_longitude: Optional[float] = None, 
-                   death_date: Optional[str] = None, death_city: Optional[str] = None, 
-                   death_state: Optional[str] = None, death_country_code: Optional[str] = None,
-                   death_latitude: Optional[float] = None, death_longitude: Optional[float] = None, 
-                   nationality: Optional[str] = None, father_id: Optional[int] = None, 
-                   mother_id: Optional[int] = None, occupation: Optional[str] = None, 
-                   residence_street: Optional[str] = None, residence_city: Optional[str] = None, 
-                   residence_state: Optional[str] = None, residence_country_code: Optional[str] = None, 
-                   residence_latitude: Optional[float] = None, residence_longitude: Optional[float] = None,
-                   cause_of_death: Optional[str] = None, notes: Optional[str] = None) -> Optional[int]:
-        """
-        Adds a new person to the `People` table with detailed location information.
-    
-        Args:
-            first_name, middle_name, last_name: Personal details.
-            birth_date, birth_city, birth_state, birth_country_code, birth_latitude, birth_longitude: Birth details.
-            death_date, death_city, death_state, death_country_code, death_latitude, death_longitude: Death details.
-            nationality: Nationality of the person.
-            father_id, mother_id: Foreign keys for parents.
-            occupation, residence details (street, city, state, country, latitude, longitude), cause_of_death, notes: Additional info.
-    
-        Returns:
-            Optional[int]: The ID of the newly added person, or None if an error occurred.
-        """
+                    birth_date: Optional[str] = None, place_of_birth: Optional[str] = None, 
+                    nationality: Optional[str] = None, father_id: Optional[int] = None, 
+                    mother_id: Optional[int] = None, occupation: Optional[str] = None, 
+                    residence: Optional[str] = None, death_date: Optional[str] = None, 
+                    death_place: Optional[str] = None, cause_of_death: Optional[str] = None, 
+                    notes: Optional[str] = None) -> Optional[int]:
+        """Adds a person to the People table and returns their ID."""
         try:
             self.cursor.execute('''
-                INSERT INTO People (first_name, middle_name, last_name, birth_date, birth_city, birth_state, 
-                                   birth_country_code, birth_latitude, birth_longitude, death_date, death_city, 
-                                   death_state, death_country_code, death_latitude, death_longitude, nationality, 
-                                   father_id, mother_id, occupation, residence_street, residence_city, 
-                                   residence_state, residence_country_code, residence_latitude, residence_longitude, 
-                                   cause_of_death, notes)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-            ''', (first_name, middle_name, last_name, birth_date, birth_city, birth_state, birth_country_code, 
-                  birth_latitude, birth_longitude, death_date, death_city, death_state, death_country_code, 
-                  death_latitude, death_longitude, nationality, father_id, mother_id, occupation, 
-                  residence_street, residence_city, residence_state, residence_country_code, 
-                  residence_latitude, residence_longitude, cause_of_death, notes))
+                INSERT INTO People (first_name, middle_name, last_name, birth_date, place_of_birth, 
+                                      nationality, father_id, mother_id, occupation, residence, 
+                                      death_date, death_place, cause_of_death, notes) 
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            ''', (first_name, middle_name, last_name, birth_date, place_of_birth, nationality, 
+                   father_id, mother_id, occupation, residence, death_date, death_place, 
+                   cause_of_death, notes))
             self.conn.commit()
             logging.info(f"Person '{first_name} {middle_name} {last_name}' added successfully.")
             return self.cursor.lastrowid
         except sqlite3.Error as e:
             logging.error(f"Error adding person: {e}")
-            return None
+            return None    
     
         def fetch_existing_data(self) -> Tuple[pd.DataFrame, pd.DataFrame]:
             """Fetch existing data from People table."""
@@ -212,17 +170,11 @@ class AncestryDatabase:
         self.close()
         return df_people
     
-    def compare_and_update(self, df_people, df_db_people):
-        """
-        Compares and updates the database based on differences in the input data.
-        
-        Args:
-            df_people (DataFrame): Data from the input Excel file.
-            df_db_people (DataFrame): Current database data for comparison.
-    
-        Returns:
-            List[str]: A log of changes made to the database.
-        """
+    def compare_and_update(self, 
+                           df_people, 
+                           df_db_people
+                           ):
+        """Compare and update the database based on differences in the input data."""
         self.connect()
         cursor = self.conn.cursor()
         changes_log = []
@@ -247,40 +199,17 @@ class AncestryDatabase:
                 columns = ", ".join(row.keys())
                 placeholders = ", ".join(["?"] * len(row))
                 insert_query = f"INSERT INTO People ({columns}) VALUES ({placeholders})"
-                cursor.execute(insert_query, tuple(row.values))
+                cursor.execute(insert_query, tuple([x.item() if isinstance(x, np.ndarray) else x for x in row.values]))
                 changes_log.append(f"Added Person: {row['person_id']}")
-    
+        
         self.conn.commit()
         self.close()
         return changes_log
 
     def get_person_by_id(self, person_id: int) -> Optional[Tuple]:
-        """
-        Retrieves a person by their ID, including all location details.
-        
-        Args:
-            person_id (int): The ID of the person to retrieve.
-        
-        Returns:
-            Optional[Tuple]: A tuple containing all person details or None if not found.
-        """
-        try:
-            self.cursor.execute('''
-                SELECT person_id, first_name, middle_name, last_name, maiden_name,
-                       birth_date, birth_city, birth_state, birth_country_code, birth_latitude, birth_longitude,
-                       death_date, death_city, death_state, death_country_code, death_latitude, death_longitude,
-                       nationality, father_id, mother_id, occupation, 
-                       residence_street, residence_city, residence_state, residence_country_code, 
-                       residence_latitude, residence_longitude, cause_of_death, notes
-                FROM People 
-                WHERE person_id = ?
-            ''', (person_id,))
-            
-            person = self.cursor.fetchone()
-            return person if person else None
-        except sqlite3.Error as e:
-            logging.error(f"Error retrieving person with ID {person_id}: {e}")
-            return None
+        """Retrieves a person by their ID."""
+        self.cursor.execute('SELECT * FROM People WHERE person_id = ?', (person_id,))
+        return self.cursor.fetchone()
 
     def get_ancestry(self, person_id: int) -> List[Tuple[int, str, str]]:
         """
@@ -318,7 +247,7 @@ class AncestryDatabase:
                 ancestry.append((current_id, name, relation, generation))
     
                 # Add parents with generation decremented
-                father_id, mother_id = person[18], person[19]
+                father_id, mother_id = person[8], person[9]
                 if father_id:
                     to_process.append((father_id, generation - 1))
                 if mother_id:
