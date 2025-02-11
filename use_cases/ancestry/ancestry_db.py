@@ -3,18 +3,17 @@
 Created on Tue Feb  4 10:27:04 2025
 
 @author: otrevizo
+
+ancestry_project/
+│── ancestry_db.py              # Handles database interactions (the class)
+│── ancestry_get_input_xlsx.py  # Get ancestry_input.xlsx and update the db
+│── ancestry_inspect.py         # Display table
+│── ancestry_tests.py           # Adds records to the db, hardcoded, by hand
+│── ancestry_export_xlsx.py     # Write db to Excel file
+│── ancestry_family_tree.py     # Build the family tree (previous gens)
+
 """
 
-# -*- coding: utf-8 -*-
-"""
-ancestry_db.py
-Handles database interactions for the ancestry project.
-"""
-# -*- coding: utf-8 -*-
-"""
-ancestry_db.py
-Handles database interactions for the ancestry project.
-"""
 import sqlite3
 import pandas as pd
 import numpy as np

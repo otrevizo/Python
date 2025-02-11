@@ -9,12 +9,12 @@ The Excel file will have two sheets.
 One sheet for People and one sheet for Relationships tables
 
 ancestry_project/
-│── ancestry_db.py              # Handles database interactions (this class)
-│── ancestry_main.py            # Entry point for running operations
-│── ancestry_inspect.py         # Print tables
-│── ancestry_tests.py           # Unit tests for database functions
+│── ancestry_db.py              # Handles database interactions (the class)
+│── ancestry_get_input_xlsx.py  # Get ancestry_input.xlsx and update the db
+│── ancestry_inspect.py         # Display table
+│── ancestry_tests.py           # Adds records to the db, hardcoded, by hand
 │── ancestry_export_xlsx.py     # Write db to Excel file
-
+│── ancestry_family_tree.py     # Build the family tree (previous gens)
 
 """
 import sqlite3
