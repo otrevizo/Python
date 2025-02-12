@@ -420,12 +420,38 @@ class AncestryDatabase:
             print(f"Error reading {INPUT_FILE}: {e}")
             return None, None
 
-    @staticmethod
-    def archive_input_file(input_file):
-        # Rename input file after processing
-        INPUT_FILE = input_file
-        timestamp = datetime.now().strftime("%Y.%m.%d_%H.%M.%S")
-        new_name = f"ancestry_digested_{timestamp}.xlsx"
-        os.rename(INPUT_FILE, new_name)
-        print(f"Renamed {INPUT_FILE} to {new_name}")
-
+#    @staticmethod
+    def read_csv_file(self, input_file: str) -> pd.DataFrame:
+        """
+        Reads the input CSV file and returns a pandas DataFrame.
+        
+        Args:
+            input_file (str): Path to the input CSV file.
+        
+        Returns:
+            pd.DataFrame: DataFrame with the contents of the CSV file.
+        """
+        try:
+            df = pd.read_csv(input_file)
+            logging.info(f"CSV file '{input_file}' read successfully.")
+            return df
+        except Exception as e:
+            logging.error(f"Error reading CSV file '{input_file}': {e}")
+            return pd.DataFrame()
+    
+#    @staticmethod
+    def archive_file(self, input_file: str) -> None:
+        """
+        Renames the input file with a timestamp after processing.
+        
+        Args:
+            input_file (str): Path to the input file.
+        """
+        try:
+            base_name, ext = os.path.splitext(input_file)
+            timestamp = datetime.now().strftime("%Y.%m.%d_%H.%M.%S")
+            new_name = f"{base_name}_digested_{timestamp}{ext}"
+            os.rename(input_file, new_name)
+            logging.info(f"Renamed '{input_file}' to '{new_name}'.")
+        except Exception as e:
+            logging.error(f"Error archiving file '{input_file}': {e}")

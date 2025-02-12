@@ -1,0 +1,18 @@
+﻿person_id,first_name,middle_name,last_name,maiden_name,birth_date,birth_city,birth_state,birth_country_code,birth_latitude,birth_longitude,death_date,death_city,death_state,death_country_code,death_latitude,death_longitude,nationality,father_id,mother_id,occupation,residence_street,residence_city,residence_state,residence_country_code,residence_latitude,residence_longitude,cause_of_death,notes,created_at
+1,Antonio,,Veneziano,,1935-05-22,Philadelphia,PA,USA,39.9526,-75.1652,,,,,,,USA,6,7,,123 Main St,Philadelphia,PA,USA,39.9526,-75.1652,,,2025-02-10 15:34:34
+2,Maria,,Mancini,,1937-11-09,New York,NY,USA,40.7128,-74.006,,,,,,,USA,8,9,,456 Park Ave,New York,NY,USA,40.7128,-74.006,,,2025-02-10 15:34:34
+3,Lucia,,Veneziano,,1960-07-15,Philadelphia,PA,USA,39.9526,-75.1652,,,,,,,USA,1,2,,,Philadelphia,PA,USA,39.9526,-75.1652,,,2025-02-10 15:34:34
+4,Gianna,,Veneziano,,1963-04-25,Philadelphia,PA,USA,39.9526,-75.1652,,,,,,,USA,1,2,,,Philadelphia,PA,USA,39.9526,-75.1652,,,2025-02-10 15:34:34
+5,Marco,,Veneziano,,1966-09-10,Philadelphia,PA,USA,39.9526,-75.1652,,,,,,,USA,1,2,,,Philadelphia,PA,USA,39.9526,-75.1652,,,2025-02-10 15:34:34
+6,Paolo,,Veneziano,,1905-08-20,Rome,LAZ,ITA,41.9028,12.4964,,,,,,,ITA,10,11,,,Rome,LAZ,ITA,41.9028,12.4964,,,2025-02-10 15:34:34
+7,Rosa,,Conti,,1908-04-10,Naples,CAM,ITA,40.8518,14.2681,,,,,,,ITA,12,13,,,Naples,CAM,ITA,40.8518,14.2681,,,2025-02-10 15:34:34
+8,Giovanni,,Mancini,,1880-06-15,Florence,TOS,ITA,43.7696,11.2558,,,,,,,ITA,14,15,,,Florence,TOS,ITA,43.7696,11.2558,,,2025-02-10 15:34:34
+9,Anna,,Russo,,1882-09-21,Milan,PIE,ITA,45.4642,9.19,,,,,,,ITA,16,17,,,Milan,PIE,ITA,45.4642,9.19,,,2025-02-10 15:34:34
+10,Giovanni,,Veneziano,,1880-06-15,Rome,LAZ,ITA,41.9028,12.4964,,,,,,,ITA,,,,,Rome,LAZ,ITA,41.9028,12.4964,,,2025-02-10 15:34:34
+11,Anna,,Meloni,,1882-09-21,Rome,LAZ,ITA,41.9028,12.4964,,,,,,,ITA,,,,,Rome,LAZ,ITA,41.9028,12.4964,,,2025-02-10 15:34:34
+12,Giuseppe,,Conti,,1878-11-03,Naples,CAM,ITA,40.8518,14.2681,,,,,,,ITA,,,,,Naples,CAM,ITA,40.8518,14.2681,,,2025-02-10 15:34:34
+13,Luisa,,Ferrara,,1881-07-12,New York,NY,USA,40.7128,-74.006,,,,,,,USA,,,,,New York,NY,USA,40.7128,-74.006,,,2025-02-10 15:34:34
+14,Marco,,Mancini,,1879-05-30,Florence,TOS,ITA,43.7696,11.2558,,,,,,,ITA,,,,,Florence,TOS,ITA,43.7696,11.2558,,,2025-02-10 15:34:34
+15,Caterina,,Bianchi,,1883-02-17,Florence,TOS,ITA,43.7696,11.2558,,,,,,,ITA,,,,,Florence,TOS,ITA,43.7696,11.2558,,,2025-02-10 15:34:34
+16,Francesco,,Russo,,1885-01-20,Milan,PIE,ITA,45.4642,9.19,,,,,,,ITA,,,,,Milan,PIE,ITA,45.4642,9.19,,,2025-02-10 15:34:34
+17,Elisabetta,,Rosati,,1887-06-10,Milan,PIE,ITA,45.4642,9.19,,,,,,,ITA,,,,,Milan,PIE,ITA,45.4642,9.19,,,2025-02-10 15:34:34
