@@ -183,6 +183,46 @@ git push
 
 ---
 
+## PAT Expiration — When git push Fails with 401 / Invalid Token
+
+GitHub Personal Access Tokens (PATs) expire. When yours does, `git push`
+will fail with:
+
+```
+remote: Invalid username or token. Password authentication is not supported.
+fatal: Authentication failed for 'https://github.com/...'
+```
+
+**The fix — three steps:**
+
+**Step 1 — Generate a new PAT:**
+1. Go to https://github.com/settings/tokens
+2. Click **Generate new token (classic)**
+3. Name it (e.g. `Mac Terminal 2026`)
+4. Set expiration (90 days or No expiration)
+5. Check ✅ **repo** scope
+6. Click **Generate token**
+7. **Copy immediately** — it only shows once!
+8. Save in KeePass before doing anything else
+
+**Step 2 — Push again (git will prompt for credentials):**
+```bash
+git push origin main
+```
+- **Username:** your GitHub username (e.g. `otrevizo`)
+- **Password:** paste the new `ghp_...` token
+
+**Step 3 — Verify osxkeychain saved it:**
+```bash
+git push
+```
+If the next push is silent (no prompt) — osxkeychain saved it. Done. ✅
+
+> **Note:** `git commit` always works even with an expired token — commits
+> are local. Only `git push` requires authentication.
+
+---
+
 ## Typical Session — Start to Finish
 
 ```bash
