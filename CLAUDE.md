@@ -33,10 +33,9 @@ export ANTHROPIC_API_KEY='sk-ant-...'   # add to ~/.zshrc
 | Folder | Contents |
 |---|---|
 | `python_vignettes/` | Language fundamentals, pandas, numpy, plotting, stats, OOP, R-to-Python (`_r2p` suffix) conversions |
-| `machine_learning/` | Supervised learning notebooks following ISLR chapters (Ch3, Ch4, Ch8, Ch10); Kaggle examples; LLM hello world |
+| `machine_learning/` | Supervised learning notebooks following ISLR chapters (Ch3, Ch4, Ch8, Ch10); Kaggle examples; LLM hello world; agentic AI vignette |
 | `toolbox/` | Reusable standalone notebooks: descriptive stats, prediction metrics, visualization helpers |
 | `use_cases/` | End-to-end applied analyses on public datasets (migration, FIFA, markets) |
-| `agentic_ai/` | Agentic AI with Anthropic Tool Use — Claude-driven stock tracking agent |
 | `data/` | CSV/XLS/SQLite datasets used across notebooks |
 
 ## Notebook Conventions
@@ -58,7 +57,7 @@ Some notebooks have a paired `.py` file (e.g. `python_functions_vignette.py` alo
 - `_oo` suffix — object-oriented implementations
 - `_ISLR_ChN` — tied to a specific chapter of *Introduction to Statistical Learning with Python*
 
-## Agentic AI Pattern (`agentic_ai/stock_agent.ipynb`)
+## Agentic AI Pattern (`machine_learning/agentic_ai_vignette_yfinance.ipynb`)
 
 The agent loop pattern used here:
 1. Define Python tool functions (`get_stock_price`, `get_portfolio_summary` backed by `yfinance`)
