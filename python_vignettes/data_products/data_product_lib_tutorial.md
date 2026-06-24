@@ -2,9 +2,16 @@
 
 Personal documentation, written the way pandas documents itself: a short
 tutorial (this file) plus the introspection habit (`?`, `??`, `help()`) for
-everything this file doesn't cover. Grounded directly in
-`data_product_lib_vignette.ipynb` and `un_wpp_data_product.ipynb`, not the
-original design spec, so this reflects what Claude Code actually built.
+everything this file doesn't cover. Grounded directly in the three vignette
+notebooks, not the original design spec, so this reflects what was actually built.
+
+Notebooks in `python_vignettes/data_products/`:
+
+| Notebook | What it covers |
+|---|---|
+| `data_product_lib_vignette.ipynb` | Every class in isolation on synthetic data. Start here. |
+| `un_wpp_data_product.ipynb` | Single-source: UN WPP → DP1 |
+| `un_wpp_wb_data_product.ipynb` | Composition: DP1 (UN WPP) ⊕ DP2 (World Bank) → DP3 |
 
 Module location: `python_vignettes/data_products/data_product_lib.py`
 
@@ -131,7 +138,26 @@ df[[col]].describe()       # use it without hard-coding the raw name
 ```
 
 `.to_dict()` returns `{business_name: {column, unit, description,
-source_system}}`, which is convenient to drop straight into a DataFrame:
+source_system}}`, which is convenient to drop straight into a DataFrame.
+
+In a single-source product, `source_system` is often left `None`. In a
+multi-source merged product it distinguishes provenance — each entry carries
+the name of the source it came from:
+
+```python
+wpp_semantic.register('net_migration_rate', 'NetMigrationRate_per_Kpop',
+                       'per 1,000 population', 'Net migrants per 1,000 residents',
+                       source_system='UN WPP 2024')
+
+wb_semantic.register('gdp_growth', 'GDP_growth_pct', '% per year',
+                      'GDP growth rate (NY.GDP.MKTP.KD.ZG)',
+                      source_system='World Bank WDI')
+```
+
+The merged product's `.card()` then shows which business name came from which
+source — useful when debugging a join or auditing a contract.
+
+`.to_dict()` as a DataFrame:
 
 ```python
 import pandas as pd
@@ -243,12 +269,91 @@ dp.contract('output/my_product_contract.json')
 
 ---
 
-## Two worked examples in this repo
+## 5. Data Product Composition (DP1 ⊕ DP2 → DP3)
+
+`data_product_lib` has no built-in merge method — composition is a pattern,
+not a class. The pattern from `un_wpp_wb_data_product.ipynb`:
+
+```python
+def merge_data_products(dp1, dp2, on):
+    """Inner join two DataProducts; combine semantic layers; inherit lineage."""
+    merged_df = pd.merge(dp1.data, dp2.data, on=on, how='inner')
+
+    # Combined semantic layer — source_system distinguishes which source each
+    # business name came from
+    merged_semantic = SemanticLayer()
+    for name, entry in dp1.semantic_layer.to_dict().items():
+        merged_semantic.register(name, entry['column'], entry['unit'],
+                                 entry['description'], entry['source_system'])
+    for name, entry in dp2.semantic_layer.to_dict().items():
+        merged_semantic.register(name, entry['column'], entry['unit'],
+                                 entry['description'], entry['source_system'])
+
+    # Full lineage from both parents, prefixed, then the merge step appended
+    merged_lineage = LineageTracker()
+    for s in dp1.lineage.to_list():
+        merged_lineage.log(f"dp1/{s['step']}", s['operation'],
+                           s['input_shape'], s['output_shape'], s['notes'])
+    for s in dp2.lineage.to_list():
+        merged_lineage.log(f"dp2/{s['step']}", s['operation'],
+                           s['input_shape'], s['output_shape'], s['notes'])
+    merged_lineage.log('merge', 'inner_join', dp1.data.shape, merged_df.shape,
+                       f'keys: {"+".join(on)}  |  DP2 input: {dp2.data.shape}')
+
+    return merged_df, merged_semantic, merged_lineage
+```
+
+Then assemble DP3:
+
+```python
+merged_df, merged_semantic, merged_lineage = merge_data_products(
+    dp_wpp, dp_wb, on=['ISO3', 'Year']
+)
+
+merged_metadata = DataProductMetadata(
+    name    = 'UN WPP + World Bank — Demographics and GDP',
+    source  = 'UN WPP 2024 + World Bank WDI',
+    license = 'CC BY 3.0 IGO (WPP) + CC BY 4.0 (WB)',
+    # ... other fields
+)
+
+dp_merged = DataProduct(merged_df, merged_metadata, merged_semantic, merged_lineage)
+dp_merged.card()   # lineage shows all 5 steps: 3 WPP + 1 WB + 1 merge
+```
+
+**Why join on ISO3, not country name?**
+UN WPP and World Bank sometimes spell country names differently
+(e.g. "Bolivia" vs "Bolivia (Plurinational State of)"). ISO3 is the stable,
+unambiguous join key — it's in both sources and never varies.
+
+**What the merged `.card()` shows differently:**
+- Lineage has `dp1/1-load`, `dp1/2-filter`, … then `dp2/1-load`, … then `merge`
+- Semantic layer lists all 7 entries (5 WPP + 2 WB) with their `source_system`
+- Quality reports completeness across all columns from both sources
+
+**Cross-source query without hard-coding column names:**
+
+```python
+mig_col = dp_merged.semantic_layer.get('net_migration_rate')['column']  # UN WPP
+gdp_col = dp_merged.semantic_layer.get('gdp_growth')['column']           # World Bank
+
+top10 = (dp_merged.data[['Location', 'Year', mig_col, gdp_col]]
+         .query('Year == 2020')
+         .nlargest(10, mig_col))
+```
+
+If either source renames its column, only the `register()` call changes —
+the query above keeps working unchanged.
+
+---
+
+## Three worked examples in this repo
 
 | Notebook | What it shows |
 |---|---|
 | `data_product_lib_vignette.ipynb` | Every class in isolation, on a 30-row synthetic store-sales table. Start here. |
-| `un_wpp_data_product.ipynb` | The real thing: `load_un_wpp()` → `filter_countries()` → `clean_types()`, wrapped into a `DataProduct`, exported to parquet + JSON contract. |
+| `un_wpp_data_product.ipynb` | Single-source: `load_un_wpp()` → `filter_countries()` → `clean_types()`, wrapped into DP1, exported to parquet + JSON contract. |
+| `un_wpp_wb_data_product.ipynb` | Composition: DP1 (UN WPP, 5 indicators) ⊕ DP2 (World Bank GDP, 2 indicators) → DP3 via inner join on ISO3 + Year; 5-step inherited lineage; cross-source semantic query. |
 
 ---
 
