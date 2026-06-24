@@ -321,6 +321,23 @@ dp_merged = DataProduct(merged_df, merged_metadata, merged_semantic, merged_line
 dp_merged.card()   # lineage shows all 5 steps: 3 WPP + 1 WB + 1 merge
 ```
 
+**Known tradeoff — semantic name collisions:**
+The merge loop registers DP1's entries then DP2's into one dict keyed by
+business name. Without a guard, a name present in both sources would silently
+overwrite DP1's definition with DP2's. The function handles this with a
+pre-merge collision check that raises `ValueError` immediately rather than
+proceeding with a shadowed entry:
+
+```python
+collisions = set(dp1.semantic_layer.to_dict()) & set(dp2.semantic_layer.to_dict())
+if collisions:
+    raise ValueError(f'Semantic name collision(s): {sorted(collisions)}')
+```
+
+This didn't fire for WPP ⊕ WB (zero overlap between `net_migration_rate`,
+`population`, … and `gdp`, `gdp_growth`) but will matter the moment a third
+source also registers `population`.
+
 **Why join on ISO3, not country name?**
 UN WPP and World Bank sometimes spell country names differently
 (e.g. "Bolivia" vs "Bolivia (Plurinational State of)"). ISO3 is the stable,
