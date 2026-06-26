@@ -17,6 +17,46 @@ Module location: `python_vignettes/data_products/data_product_lib.py`
 
 ---
 
+## Origin — what this module is and is not
+
+`data_product_lib` is a **custom module written for this project**, not a
+published package. It does not exist on PyPI, has no external GitHub, and has
+no maintainer other than the owner of this repo. The import works because
+Jupyter's working directory is `python_vignettes/data_products/`, where the
+`.py` file lives alongside the notebooks.
+
+To confirm where Python found it:
+
+```python
+import data_product_lib
+print(data_product_lib.__file__)
+# /Users/otrevizo/GitHub/Python/python_vignettes/data_products/data_product_lib.py
+```
+
+**Where the ideas come from:**
+The four classes implement a small, opinionated subset of the *data product*
+concept from the data mesh literature. The intellectual lineage:
+
+| Class | Concept source |
+|---|---|
+| `DataProductMetadata` | Data mesh — Zhamak Dehghani, *Data Mesh* (O'Reilly, 2022): a data product must be discoverable, addressable, and owned |
+| `SemanticLayer` | BI semantic layers (Looker/LookML, dbt metrics layer): decouple business vocabulary from physical column names |
+| `LineageTracker` | Data lineage tools (OpenLineage, DataHub, Apache Atlas): append-only audit trail of every transformation |
+| `DataProduct` | Data contracts (Chad Sanderson, `datacontract.com`): schema + quality + lineage bundled with the data as a single governed artifact |
+
+The module was built from scratch in June 2026 to demonstrate these concepts
+in a self-contained, dependency-free way. The only external libraries it uses
+are `pandas` (already in the environment) and Python's `json` / `dataclasses`
+stdlib modules.
+
+**If you want production-grade equivalents:**
+- Lineage at scale: OpenLineage (`openlineage.io`), DataHub (`datahubproject.io`)
+- Semantic layer at scale: dbt Semantic Layer (`docs.getdbt.com`), Looker
+- Data contracts spec: `datacontract.com`
+- Schema standards: Frictionless Data (`specs.frictionlessdata.io/table-schema`)
+
+---
+
 ## Where pandas keeps its docs (for comparison)
 
 - User Guide (worked examples by topic): https://pandas.pydata.org/docs/user_guide/index.html
