@@ -31,7 +31,15 @@ To confirm where Python found it:
 import data_product_lib
 print(data_product_lib.__file__)
 # ~/GitHub/Python/python_vignettes/data_products/data_product_lib.py
+
+print([x for x in dir(data_product_lib) if not x.startswith('_')])
+# ['DataProduct', 'DataProductMetadata', 'LineageTracker', 'SemanticLayer',
+#  'dataclass', 'datetime', 'json', 'pd']
 ```
+
+The four classes are the public API. `dataclass`, `datetime`, `json`, and `pd`
+are imports that leaked into the module namespace — normal in a small local
+module, harmless to ignore.
 
 **Where the ideas come from:**
 The four classes implement a small, opinionated subset of the *data product*
