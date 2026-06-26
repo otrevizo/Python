@@ -30,7 +30,7 @@ To confirm where Python found it:
 ```python
 import data_product_lib
 print(data_product_lib.__file__)
-# /Users/otrevizo/GitHub/Python/python_vignettes/data_products/data_product_lib.py
+# ~/GitHub/Python/python_vignettes/data_products/data_product_lib.py
 ```
 
 **Where the ideas come from:**
