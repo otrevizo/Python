@@ -421,7 +421,8 @@ Same question. Same three models. Two conditions × 3 runs = 18 total observatio
 - **Semantic leakage** — models try business names as raw column names; GPT-4o-mini Run 3 hallucinated a hybrid: `'net_migration_rate_per_Kpop'` (neither semantic nor raw). Model-dependent: Haiku mostly, GPT-4o-mini intermittent, Sonnet never.
 - **Core failure mode** — year filter (not naming) determines correctness; merge discipline is a secondary probabilistic failure for GPT-4o-mini.
 
-**Verdict:** The semantic layer is **necessary but not sufficient.**
+**Verdict:** Hypothesis not confirmed. Condition B produced more correct answers (5/9 vs 4/9).
+The semantic layer is **proven useful — not proven necessary.**
 It closes the naming gap. It cannot close the probabilistic reasoning gap.
 
 > See `machine_learning/agentic_semantic_layer_necessity.ipynb`

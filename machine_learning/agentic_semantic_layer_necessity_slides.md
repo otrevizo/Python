@@ -239,23 +239,32 @@ UAE led the UN_WPP migration list but was absent from the GDP list seen.
 
 ---
 
-## Hypothesis Verdict
+## Hypothesis Verdict (3 runs)
 
-> **"LLM agents reason more accurately and consistently when querying data
-> through semantic business names than when querying raw technical column names."**
+> *"LLM agents reason more accurately and consistently through semantic business names
+> than through raw technical column names."*
 
-| Claim | Result |
+**The hypothesis is not confirmed.**
+
+| | Condition A (semantic) | Condition B (raw) |
+|---|---|---|
+| GPT-4o-mini | 0/3 | 0/3 |
+| Haiku | 3/3 | 3/3 |
+| Sonnet | 1/3 | 2/3 |
+| **Total** | **4/9** | **5/9** |
+
+Condition B — *without* the semantic layer — produced more correct answers.
+Sonnet did better without it. The data does not support the hypothesis.
+
+| Claim | Verdict |
 |---|---|
-| **Correctness** | Same rate across conditions — naming is not the correctness driver (3 runs). |
+| **Correctness** | Not confirmed. Condition B marginally better (5/9 vs 4/9). Naming is not the driver. |
 | **Efficiency** | ✅ Confirmed — Condition B costs 0.4–3.0 extra calls per model (persistent). |
-| **Alignment** | Confirmed for Haiku (mostly); probabilistic for GPT-4o-mini; never for Sonnet. |
-| **Failure isolation** | ✅ Confirmed — year filter, merge discipline, scope inference dominate. |
+| **Alignment** | ✅ Confirmed — leakage and hallucinated names prove models expect business names. |
+| **Failure isolation** | ✅ Confirmed — year filter and merge discipline determine correctness, not naming. |
 
-**Verdict: Necessary but not sufficient — confirmed across 3 runs.**
-
-> The semantic layer is **necessary but not sufficient.**
-> It eliminates naming friction and aligns tool interfaces to model priors.
-> It cannot fix year filter failures, merge discipline, or scope inference errors.
+> **The semantic layer is proven useful — not proven necessary.**
+> It closes the naming gap. It cannot close the reasoning gap.
 
 ---
 
@@ -331,7 +340,8 @@ Finding 4:  Core failure modes — year filter (GPT-4o-mini always, Sonnet
 Finding 5:  Sonnet Condition B trending better (2/3) vs Condition A (1/3).
             Tentative signal: raw names may prompt more methodical querying.
 
-Verdict:    Semantic layer is necessary but not sufficient.
+Verdict:    Hypothesis not confirmed. Condition B produced more correct answers
+            (5/9 vs 4/9). The semantic layer is proven useful — not necessary.
             It closes the naming gap. It cannot close the reasoning gap.
 ```
 
