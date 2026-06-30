@@ -430,6 +430,36 @@ It closes the naming gap. It cannot close the probabilistic reasoning gap.
 
 ---
 
+## Experiment 3 — Governed Cross-Metric Tool
+
+**Hypothesis:** A governed cross-metric tool with `year` as a required parameter will
+eliminate the year-filter failure and produce consistent correct answers across all models.
+
+Completes the 2×2 matrix:
+
+| | Semantic layer | No semantic layer |
+|---|---|---|
+| **No cross-metric tool (Exp 2)** | 4/9 correct | 5/9 correct |
+| **Cross-metric tool (Exp 3)** | **3/3 correct** ✅ | 2/3 correct |
+
+**Key findings:**
+- **Condition A (tool + semantic): 3/3 perfect.** First time GPT-4o-mini correct in the series.
+  All models chose `year=2023` on the first call — no second round, no divergence.
+- **Condition B (tool + raw names): 2/3.** Year required, but GPT-4o-mini chose 2022 instead of 2023.
+  Haiku and Sonnet tried 2024 (empty), recovered to 2023. Column names chosen correctly by all.
+- **Temporal anchoring:** Semantic business names implicitly signal "current, canonical data" —
+  all Condition A models chose 2023 first try. Raw column names provide no such signal.
+- **Interaction is superadditive:** governed tool alone 2/3 · semantic alone 4/9 · both together 3/3.
+  Neither is sufficient without the other.
+
+**Revised conclusion:** The semantic layer IS necessary — but only when the tool is also governed.
+Experiment 2's "useful but not necessary" finding was conditional on a poorly structured tool.
+
+> See `machine_learning/agentic_cross_metric_tool.ipynb`
+> and `agentic_cross_metric_tool_slides.md` for the full 2×2 analysis.
+
+---
+
 ## Summary
 
 ```
