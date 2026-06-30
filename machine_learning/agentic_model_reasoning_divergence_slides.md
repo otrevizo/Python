@@ -79,114 +79,119 @@ That is where divergence enters.
 
 ---
 
-## GPT-4o-mini — Consistently Wrong, Different Failure Each Run
+## GPT-4o-mini — 0 / 3 Correct, Different Failure Every Run
 
-**Run 1** — migration queried first, no year filter → Hong Kong SAR (357.14) ❌
+**Run 1** — migration first, no year → Hong Kong SAR (357.14) ❌
 ```
 -> query_product({'business_name': 'net_migration_rate', 'top_n': 20})  ← FIRST
--> query_product({'business_name': 'gdp', 'top_n': 20})                 ← SECOND
+-> query_product({'business_name': 'gdp', 'top_n': 20})
 ```
 
-**Run 2** — GDP queried first (fixed!), still no year filter → USA (2.84) ❌
+**Run 2** — GDP first, no year → USA (2.84) ❌
 ```
--> query_product({'business_name': 'gdp', 'top_n': 20})                 ← FIRST
--> query_product({'business_name': 'net_migration_rate', 'top_n': 20})  ← SECOND
+-> query_product({'business_name': 'gdp', 'top_n': 20})                 ← fixed order
+-> query_product({'business_name': 'net_migration_rate', 'top_n': 20})  ← still no year
 ```
 
-The query order changed between runs. The answer changed. The failure did not.
+**Run 3** — migration first, skipped GDP query entirely → Hong Kong SAR (357.14) ❌
+```
+-> query_product({'business_name': 'net_migration_rate', 'top_n': 20})  ← only query
+```
+*(6 tool calls total — GDP was never queried)*
 
-**Root cause:** No year filter in either run. Without `year=2023`, queries return
-top-N across all years 1961–2023. The model never inferred that "top 20 GDP"
-implies a specific year context — and no tool enforced it.
+Three runs. Three different tool sequences. One consistent failure: **no year filter.**
+Without `year=2023`, queries return top-N across all years 1961–2023.
+The model never inferred that "top 20 GDP" implies a specific year context.
 
 ---
 
-## Haiku — Stochastic: Partial in Run 1, Best Answer in Run 2
+## Haiku — Stochastic but Converging (2 / 3 Correct)
 
-**Run 1** — GDP first, wide net, no year filter → confused, hedged Canada ⚠️
+**Run 1** — GDP first, no year filter → confused, hedged Canada ⚠️
 ```
 -> query_product({'business_name': 'gdp', 'top_n': 20})
--> query_product({'business_name': 'net_migration_rate', 'top_n': 100})  ← no year filter
+-> query_product({'business_name': 'net_migration_rate', 'top_n': 100})  ← no year
 ```
 
-**Run 2** — GDP first, then added year=2023 to both queries → Canada ✅
+**Run 2** — GDP first, added year=2023 → Canada, full ranked table ✅
 ```
--> query_product({'business_name': 'gdp', 'top_n': 20})
--> query_product({'business_name': 'net_migration_rate', 'top_n': 20})
--> query_product({'business_name': 'gdp', 'year': 2023, 'top_n': 20})           ← added
--> query_product({'business_name': 'net_migration_rate', 'year': 2023, 'top_n': 100})  ← added
+-> query_product({'business_name': 'gdp', 'year': 2023, 'top_n': 20})
+-> query_product({'business_name': 'net_migration_rate', 'year': 2023, 'top_n': 100})
 ```
 
-Run 2 produced the **most complete answer of all six runs** — a full ranked table
-of all 20 top-GDP countries with their 2023 migration rates.
-
-Haiku independently discovered the same year=2023 strategy that Sonnet used in Run 1.
-It is capable of correct reasoning — but applies it stochastically.
-
----
-
-## Sonnet — Temporal Filter, Correct Answer
-
+**Run 3** — GDP first, added year=2023 → Canada ✅
 ```
--> list_available_sources({})
--> load_source({'source_name': 'UN_WPP'})
--> load_source({'source_name': 'WORLD_BANK_GDP'})
--> check_semantic_conflicts({...})
--> merge_sources({...})
 -> query_product({'business_name': 'gdp', 'top_n': 20})
 -> query_product({'business_name': 'net_migration_rate', 'top_n': 20})
--> query_product({'business_name': 'net_migration_rate', 'top_n': 20, 'year': 2023})  ← added
--> query_product({'business_name': 'gdp', 'top_n': 20, 'year': 2023})                ← added
+-> query_product({'business_name': 'net_migration_rate', 'year': 2023, 'top_n': 50})  ← added
 ```
 
-**Answer:** Canada — net migration rate +11.04 per 1,000 (2023) ✅
-
-**What worked:** Sonnet issued 9 tool calls vs 7 for the others.
-It added `year=2023` to both queries as a third reasoning step —
-temporal disambiguation reduced the search space enough that the
-cross-metric intersection became tractable in text.
+Run 1 was the outlier. Once Haiku discovered the year=2023 strategy in Run 2,
+it applied it again in Run 3 — different top_n (50 vs 100) but same temporal anchor.
+Capable, and converging toward reliability.
 
 ---
 
-## Results — Two Runs
+## Sonnet — Stable and Self-Optimising (3 / 3 Correct)
 
-**Run 1**
+**Run 1 & 2** — GDP first, exploratory migration query, then year=2023 on both (9 calls)
+```
+-> query_product({'business_name': 'gdp', 'top_n': 20})
+-> query_product({'business_name': 'net_migration_rate', 'top_n': 20})           ← explore
+-> query_product({'business_name': 'net_migration_rate', 'top_n': 20, 'year': 2023})
+-> query_product({'business_name': 'gdp', 'top_n': 20, 'year': 2023})
+```
 
-| Model | Query order | Year filter | Answer | Correct? |
-|---|---|---|---|---|
-| GPT-4o-mini | migration first | none | Hong Kong SAR (357.14) | NO |
-| Haiku | GDP first | none | Confused / Canada (hedged) | PARTIAL |
-| Sonnet | GDP first | 2023 | Canada (+11.04) | YES |
+**Run 3** — GDP first, migration year=2023 directly — no exploratory step (7 calls)
+```
+-> query_product({'business_name': 'gdp', 'top_n': 20})
+-> query_product({'business_name': 'net_migration_rate', 'top_n': 20, 'year': 2023})  ← direct
+```
 
-**Run 2**
+**Answer:** Canada — +11.04 per 1,000 (2023) ✅ in all three runs.
 
-| Model | Query order | Year filter | Answer | Correct? |
-|---|---|---|---|---|
-| GPT-4o-mini | GDP first | none | USA (2.84) | NO |
-| Haiku | GDP first | 2023 | Canada (+11.039) — full table | YES |
-| Sonnet | GDP first | 2023 | Canada (+11.04) | YES |
-
-**Six runs. Same tools. Same data. Divergence confirmed across both.**
+Sonnet skipped the exploratory unfiltered query in Run 3 — going straight to
+`year=2023` on the first migration call. Same correct answer, fewer tool calls.
+The temporal disambiguation strategy is stable and becoming more efficient.
 
 ---
 
-## Stability Across Runs
+## Results — Three Runs
 
-| Model | Run 1 | Run 2 | Stable? |
-|---|---|---|---|
-| GPT-4o-mini | Wrong (bad order, outlier) | Wrong (right order, no year) | Consistently wrong — different failure each time |
-| Haiku | Partial (hedged Canada) | Correct (full ranked table) | Stochastic — capable but unreliable |
-| Sonnet | Correct (Canada) | Correct (Canada) | Stable and correct |
+| Model | Run 1 | Run 2 | Run 3 | Correct rate |
+|---|---|---|---|---|
+| GPT-4o-mini | NO (HK SAR, bad order) | NO (USA, no year) | NO (HK SAR, skipped GDP) | **0 / 3** |
+| Haiku | PARTIAL (hedged) | YES (full table) | YES (Canada) | **2 / 3** |
+| Sonnet | YES (Canada) | YES (Canada) | YES (Canada, fewer calls) | **3 / 3** |
 
-**GPT-4o-mini's** failure mode is consistent: it never adds a year filter.
-The query order is stochastic — it changed between runs — but that is not the root cause.
+**Nine runs total. Same tools. Same data. Divergence confirmed across all three.**
 
-**Haiku** is the most surprising. It went from a confused partial answer in Run 1
-to the most complete answer of any run in Run 2. Capable, but not reliable.
+Key observations:
+- GPT-4o-mini: no year filter in any run — the consistent failure
+- Haiku: found the year=2023 strategy in Run 2, applied it in Run 3
+- Sonnet: stable and got more efficient (9 → 9 → 7 tool calls)
 
-**Sonnet** applied identical strategy both times: GDP first, migration, then
-year=2023 filter on both. The temporal disambiguation appears to be a stable
-reasoning pattern for this model on this question type.
+---
+
+## Stability Across Three Runs
+
+| Model | Run 1 | Run 2 | Run 3 | Correct rate |
+|---|---|---|---|---|
+| GPT-4o-mini | Wrong | Wrong | Wrong | 0 / 3 |
+| Haiku | Partial | Correct | Correct | 2 / 3 |
+| Sonnet | Correct | Correct | Correct | 3 / 3 |
+
+**GPT-4o-mini** never added a year filter in any run. Query order was stochastic
+(migration-first in Runs 1 and 3; GDP-first in Run 2) but that is not the root cause.
+Run 3 regressed further — it skipped the GDP query entirely with only 6 tool calls.
+
+**Haiku** converged. Run 1 was the outlier — no year filter, confused reasoning.
+Runs 2 and 3 both applied year=2023 and reached the correct answer.
+Stochastic at the start; converging toward reliability.
+
+**Sonnet** was stable and self-optimising. Correct in all three runs.
+Runs 1 and 2 used 9 tool calls with an exploratory unfiltered migration query.
+Run 3 went straight to `year=2023` — 7 tool calls, same correct answer.
 
 ---
 
@@ -216,23 +221,25 @@ When the reasoning fails, the symbolic layer preserves the trace but cannot fix 
 
 ## Hypothesis Verdict
 
-**Supported across both runs.**
+**Supported across all three runs.**
 
 | Dimension | Diverged? | Evidence |
 |---|---|---|
-| Query order | Yes | GPT-4o-mini changed order between runs |
-| Scope (top_n) | Yes | 20 vs 100 |
-| Temporal filter | Yes | Sonnet consistent; Haiku stochastic; GPT-4o-mini never |
-| Tool call count | Yes | 7 vs 7–9 vs 9 |
-| Correctness | Yes | wrong / stochastic / stable-correct |
+| Query order | Yes | GPT-4o-mini stochastic; Haiku/Sonnet GDP-first |
+| Temporal filter | Yes | Sonnet every run; Haiku Runs 2–3; GPT-4o-mini never |
+| Tool call count | Yes | 6 to 9 across models and runs |
+| Correctness | Yes | 0/3 · 2/3 · 3/3 |
 
 Each failure is traceable to a specific reasoning decision at the cross-metric gap —
 not to bad data, not to bad tools, not to a bad pipeline.
 
-The two-run study adds a new dimension: **stability**.
-Divergence is not just across models — it is across runs of the same model.
-GPT-4o-mini and Haiku are stochastic at this reasoning boundary.
-Sonnet is not.
+Three runs reveal two kinds of divergence:
+- **Cross-model divergence** — models differ in strategy and correctness
+- **Within-model variance** — the same model produces different strategies across runs
+
+GPT-4o-mini is stochastic and consistently wrong.
+Haiku is stochastic but converging toward the correct strategy.
+Sonnet is stable, correct, and self-optimising.
 
 ---
 
