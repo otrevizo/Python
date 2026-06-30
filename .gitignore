@@ -4,3 +4,6 @@
 .env
 __pycache__/
 *.pyc
+
+# Generated data product artifacts — rebuild on demand, not tracked
+python_vignettes/data_products/output/
