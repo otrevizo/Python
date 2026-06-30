@@ -375,25 +375,23 @@ Schema validation                 Scope inference
 
 ---
 
-## Next Experiment — Model Reasoning Divergence
+## Next Experiment — Model Reasoning Divergence (2 runs)
 
-The model-agnostic loop was built and run as a separate hypothesis test.
+**Hypothesis:** LLM agents diverge on cross-metric reasoning questions.
+Same question. Same tools. Same data. Three models. Run twice.
 
-**Hypothesis:** LLM agents diverge on cross-metric reasoning questions —
-specifically when the answer requires filtering by one metric and ranking
-by another simultaneously.
+| Model | Run 1 | Run 2 | Stable? |
+|---|---|---|---|
+| GPT-4o-mini | NO (Hong Kong SAR — bad order) | NO (USA — no year filter) | Consistently wrong |
+| Haiku | PARTIAL (hedged Canada) | YES (full ranked table) | Stochastic |
+| Sonnet | YES (Canada +11.04) | YES (Canada +11.04) | Stable and correct |
 
-**Same question. Same tools. Same data. Three models.**
+**Finding:** Divergence confirmed across both runs — in query order, scope,
+temporal anchoring, and correctness. Sonnet is stable; Haiku is capable but
+stochastic; GPT-4o-mini fails consistently via different failure modes.
 
-| Model | Strategy | Correct? |
-|---|---|---|
-| GPT-4o-mini | intersection — migration queried first | NO (returned Hong Kong SAR) |
-| Haiku | filter-then-rank (top_n=100) — could not cross-reference | PARTIAL |
-| Sonnet | intersection + year=2023 filter on both queries | YES (Canada, +11.04) |
-
-**Finding:** All three models diverged in query order, scope, and correctness.
-The symbolic scaffolding returned identical correct data to all three.
-The neural reasoning determined the outcome.
+The symbolic scaffolding returned identical correct data to all three models
+in both runs. The neural reasoning determined the outcome.
 
 > See `machine_learning/agentic_model_reasoning_divergence.ipynb`
 > and `agentic_model_reasoning_divergence_slides.md`
