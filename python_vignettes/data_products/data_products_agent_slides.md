@@ -402,6 +402,35 @@ The neural reasoning determined the outcome.
 
 ---
 
+## Experiment 2 — Semantic Layer Necessity
+
+**Hypothesis:** LLM agents reason more accurately and consistently through semantic business names
+than through raw technical column names.
+Same question. Same three models. Two conditions: with and without the semantic layer.
+
+| | Condition A (semantic layer) | Condition B (raw column names) |
+|---|---|---|
+| **GPT-4o-mini** | ❌ China, 357.14 (1964) | ❌ UAE, 128.43 (2007) |
+| **Haiku** | ✅ Canada, 11.039 (2023) | ✅ Canada, 11.039 (2023) |
+| **Sonnet** | ❌ Singapore, 41.83 (2007) | ❌ Singapore (same failure) |
+
+**Correctness: 1/3 in both conditions.** Naming did not determine correctness.
+
+**Key findings:**
+- **Discovery tax** — Condition B cost every model extra tool calls: GPT-4o-mini +4, Haiku +1, Sonnet +1
+- **Semantic leakage** — GPT-4o-mini and Haiku tried to use business names (`gdp`, `net_migration_rate`)
+  as raw column names before recovering via error messages. The semantic layer matches model priors.
+- **Core failure mode** — the year filter, not naming, determines correctness. Models without `year=2023`
+  return historical peaks (China 1964, UAE 2007, Singapore 2007) and get the wrong answer.
+
+**Verdict:** The semantic layer is **necessary but not sufficient.**
+It closes the naming gap. It cannot close the probabilistic reasoning gap.
+
+> See `machine_learning/agentic_semantic_layer_necessity.ipynb`
+> and `agentic_semantic_layer_necessity_slides.md` for full behavioral profiles.
+
+---
+
 ## Summary
 
 ```
