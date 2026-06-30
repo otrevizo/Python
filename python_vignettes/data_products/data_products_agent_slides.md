@@ -361,7 +361,6 @@ Schema validation                 Scope inference
 
 **Current limitations:**
 - `SOURCE_CONFIGS` has only 2 sources — agent has no real source-selection decision to make
-- Model-agnostic: only Anthropic API; OpenAI function calling not yet wired
 - UN WPP rate is a demographic residual, not the same as country headline immigration statistics
 
 **Natural next steps:**
@@ -369,9 +368,35 @@ Schema validation                 Scope inference
 | Extension | What it adds |
 |---|---|
 | Third source (WB CO₂, UN Migration Stock) | Real source-selection judgment by the agent |
-| Model-agnostic loop (Anthropic + OpenAI) | Side-by-side model comparison, same tools |
 | DP4 = DP3 ⊕ third source | Deeper composition, longer lineage |
 | Multimodal governance | Text reports + structured data as co-equal sources |
+
+→ **The model-agnostic experiment was built and run — see next slide.**
+
+---
+
+## Next Experiment — Model Reasoning Divergence
+
+The model-agnostic loop was built and run as a separate hypothesis test.
+
+**Hypothesis:** LLM agents diverge on cross-metric reasoning questions —
+specifically when the answer requires filtering by one metric and ranking
+by another simultaneously.
+
+**Same question. Same tools. Same data. Three models.**
+
+| Model | Strategy | Correct? |
+|---|---|---|
+| GPT-4o-mini | intersection — migration queried first | NO (returned Hong Kong SAR) |
+| Haiku | filter-then-rank (top_n=100) — could not cross-reference | PARTIAL |
+| Sonnet | intersection + year=2023 filter on both queries | YES (Canada, +11.04) |
+
+**Finding:** All three models diverged in query order, scope, and correctness.
+The symbolic scaffolding returned identical correct data to all three.
+The neural reasoning determined the outcome.
+
+> See `machine_learning/agentic_model_reasoning_divergence.ipynb`
+> and `agentic_model_reasoning_divergence_slides.md`
 
 ---
 
@@ -417,13 +442,17 @@ All notebooks and the `data_product_lib.py` module:
 
 ```
 ~/GitHub/Python/python_vignettes/data_products/
-  data_product_lib.py              ← 4 classes
-  data_product_lib_vignette.ipynb  ← synthetic tutorial
-  un_wpp_data_product.ipynb        ← DP1
-  un_wpp_wb_data_product.ipynb     ← DP3 = DP1 ⊕ DP2
-  agentic_data_product_vignette.ipynb ← agent loop
-  data_product_lib_tutorial.md     ← API reference
-  data_products_agent_slides.md    ← these slides
+  data_product_lib.py                 ← 4 classes
+  data_product_lib_vignette.ipynb     ← synthetic tutorial
+  un_wpp_data_product.ipynb           ← DP1
+  un_wpp_wb_data_product.ipynb        ← DP3 = DP1 ⊕ DP2
+  agentic_data_product_vignette.ipynb ← agent loop (single model)
+  data_product_lib_tutorial.md        ← API reference
+  data_products_agent_slides.md       ← these slides
+
+~/GitHub/Python/machine_learning/
+  agentic_model_reasoning_divergence.ipynb       ← three-model experiment
+  agentic_model_reasoning_divergence_slides.md   ← experiment slides
 ```
 
 *Render with Marp CLI or the VS Code Marp extension.*
