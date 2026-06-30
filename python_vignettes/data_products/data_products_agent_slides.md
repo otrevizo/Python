@@ -402,32 +402,30 @@ The neural reasoning determined the outcome.
 
 ---
 
-## Experiment 2 — Semantic Layer Necessity
+## Experiment 2 — Semantic Layer Necessity (3 runs)
 
 **Hypothesis:** LLM agents reason more accurately and consistently through semantic business names
 than through raw technical column names.
-Same question. Same three models. Two conditions: with and without the semantic layer.
+Same question. Same three models. Two conditions × 3 runs = 18 total observations.
 
-| | Condition A (semantic layer) | Condition B (raw column names) |
-|---|---|---|
-| **GPT-4o-mini** | ❌ China, 357.14 (1964) | ❌ UAE, 128.43 (2007) |
-| **Haiku** | ✅ Canada, 11.039 (2023) | ✅ Canada, 11.039 (2023) |
-| **Sonnet** | ❌ Singapore, 41.83 (2007) | ❌ Singapore (same failure) |
+**Cumulative correctness (6 observations per model):**
 
-**Correctness: 1/3 in both conditions.** Naming did not determine correctness.
+| Model | Correct | Rate | Key trait |
+|---|---|---|---|
+| GPT-4o-mini | 0/6 | **0%** | Year filter never applied; merge inconsistent |
+| Haiku | 6/6 | **100%** | Always merges, always anchors to 2023 |
+| Sonnet | 3/6 | **50%** | Year filter probabilistic; Cond B better (2/3) than A (1/3) |
 
-**Key findings:**
-- **Discovery tax** — Condition B cost every model extra tool calls: GPT-4o-mini +4, Haiku +1, Sonnet +1
-- **Semantic leakage** — GPT-4o-mini and Haiku tried to use business names (`gdp`, `net_migration_rate`)
-  as raw column names before recovering via error messages. The semantic layer matches model priors.
-- **Core failure mode** — the year filter, not naming, determines correctness. Models without `year=2023`
-  return historical peaks (China 1964, UAE 2007, Singapore 2007) and get the wrong answer.
+**Key findings (3 runs):**
+- **Discovery tax** — Condition B costs more calls across all models and all runs: GPT-4o-mini +3.0 avg, Haiku +0.4, Sonnet +1.7
+- **Semantic leakage** — models try business names as raw column names; GPT-4o-mini Run 3 hallucinated a hybrid: `'net_migration_rate_per_Kpop'` (neither semantic nor raw). Model-dependent: Haiku mostly, GPT-4o-mini intermittent, Sonnet never.
+- **Core failure mode** — year filter (not naming) determines correctness; merge discipline is a secondary probabilistic failure for GPT-4o-mini.
 
 **Verdict:** The semantic layer is **necessary but not sufficient.**
 It closes the naming gap. It cannot close the probabilistic reasoning gap.
 
 > See `machine_learning/agentic_semantic_layer_necessity.ipynb`
-> and `agentic_semantic_layer_necessity_slides.md` for full behavioral profiles.
+> and `agentic_semantic_layer_necessity_slides.md` for full per-run behavioral profiles.
 
 ---
 
