@@ -79,48 +79,49 @@ That is where divergence enters.
 
 ---
 
-## GPT-4o-mini — Wrong Order, Wrong Answer
+## GPT-4o-mini — Consistently Wrong, Different Failure Each Run
 
+**Run 1** — migration queried first, no year filter → Hong Kong SAR (357.14) ❌
 ```
--> list_available_sources({})
--> load_source({'source_name': 'UN_WPP'})
--> load_source({'source_name': 'WORLD_BANK_GDP'})
--> check_semantic_conflicts({...})
--> merge_sources({...})
 -> query_product({'business_name': 'net_migration_rate', 'top_n': 20})  ← FIRST
 -> query_product({'business_name': 'gdp', 'top_n': 20})                 ← SECOND
 ```
 
-**Answer:** China, Hong Kong SAR — 357.14 per 1,000 population ❌
+**Run 2** — GDP queried first (fixed!), still no year filter → USA (2.84) ❌
+```
+-> query_product({'business_name': 'gdp', 'top_n': 20})                 ← FIRST
+-> query_product({'business_name': 'net_migration_rate', 'top_n': 20})  ← SECOND
+```
 
-**Failure mode:** Migration was queried before GDP, with no year filter.
-The global migration top-20 spans all years 1961–2023.
-Hong Kong SAR had extreme migration spikes in certain historical years —
-a real data point, but from the wrong context.
-The model never checked whether Hong Kong SAR is in the GDP top 20.
-It is not.
+The query order changed between runs. The answer changed. The failure did not.
+
+**Root cause:** No year filter in either run. Without `year=2023`, queries return
+top-N across all years 1961–2023. The model never inferred that "top 20 GDP"
+implies a specific year context — and no tool enforced it.
 
 ---
 
-## Haiku — Right Order, Reasoning Failure
+## Haiku — Stochastic: Partial in Run 1, Best Answer in Run 2
 
+**Run 1** — GDP first, wide net, no year filter → confused, hedged Canada ⚠️
 ```
--> list_available_sources({})
--> load_source({'source_name': 'WORLD_BANK_GDP'})
--> load_source({'source_name': 'UN_WPP'})
--> check_semantic_conflicts({...})
--> merge_sources({...})
--> query_product({'business_name': 'gdp', 'top_n': 20})                  ← correct order
--> query_product({'business_name': 'net_migration_rate', 'top_n': 100})  ← wide net
+-> query_product({'business_name': 'gdp', 'top_n': 20})
+-> query_product({'business_name': 'net_migration_rate', 'top_n': 100})  ← no year filter
 ```
 
-**Answer:** Confused — mentioned USA, UAE, Qatar, hedged on Canada ⚠️
+**Run 2** — GDP first, then added year=2023 to both queries → Canada ✅
+```
+-> query_product({'business_name': 'gdp', 'top_n': 20})
+-> query_product({'business_name': 'net_migration_rate', 'top_n': 20})
+-> query_product({'business_name': 'gdp', 'year': 2023, 'top_n': 20})           ← added
+-> query_product({'business_name': 'net_migration_rate', 'year': 2023, 'top_n': 100})  ← added
+```
 
-**Failure mode:** Haiku queried GDP first (correct), then migration with a wider
-net (top_n=100). But no tool returns "migration rate filtered to GDP top-20."
-The agent had two separate result sets and could not cross-reference them in text.
-It acknowledged the limitation mid-answer and guessed Canada by domain knowledge —
-not from the data it retrieved.
+Run 2 produced the **most complete answer of all six runs** — a full ranked table
+of all 20 top-GDP countries with their 2023 migration rates.
+
+Haiku independently discovered the same year=2023 strategy that Sonnet used in Run 1.
+It is capable of correct reasoning — but applies it stochastically.
 
 ---
 
@@ -147,18 +148,45 @@ cross-metric intersection became tractable in text.
 
 ---
 
-## Results — Side by Side
+## Results — Two Runs
 
-| Model | Query order | Migration top_n | Year filter | Answer | Correct? |
-|---|---|---|---|---|---|
-| GPT-4o-mini | migration first | 20 | none | Hong Kong SAR (357.14) | NO |
-| Haiku | GDP first | 100 | none | Confused / Canada (hedged) | PARTIAL |
-| Sonnet | GDP first | 20 | 2023 | Canada (+11.04) | YES |
+**Run 1**
 
-**Three models. Same tools. Same data. Three different outcomes.**
+| Model | Query order | Year filter | Answer | Correct? |
+|---|---|---|---|---|
+| GPT-4o-mini | migration first | none | Hong Kong SAR (357.14) | NO |
+| Haiku | GDP first | none | Confused / Canada (hedged) | PARTIAL |
+| Sonnet | GDP first | 2023 | Canada (+11.04) | YES |
 
-The divergence is not in the symbolic layer — it is in the neural reasoning
-that bridges two separate query results.
+**Run 2**
+
+| Model | Query order | Year filter | Answer | Correct? |
+|---|---|---|---|---|
+| GPT-4o-mini | GDP first | none | USA (2.84) | NO |
+| Haiku | GDP first | 2023 | Canada (+11.039) — full table | YES |
+| Sonnet | GDP first | 2023 | Canada (+11.04) | YES |
+
+**Six runs. Same tools. Same data. Divergence confirmed across both.**
+
+---
+
+## Stability Across Runs
+
+| Model | Run 1 | Run 2 | Stable? |
+|---|---|---|---|
+| GPT-4o-mini | Wrong (bad order, outlier) | Wrong (right order, no year) | Consistently wrong — different failure each time |
+| Haiku | Partial (hedged Canada) | Correct (full ranked table) | Stochastic — capable but unreliable |
+| Sonnet | Correct (Canada) | Correct (Canada) | Stable and correct |
+
+**GPT-4o-mini's** failure mode is consistent: it never adds a year filter.
+The query order is stochastic — it changed between runs — but that is not the root cause.
+
+**Haiku** is the most surprising. It went from a confused partial answer in Run 1
+to the most complete answer of any run in Run 2. Capable, but not reliable.
+
+**Sonnet** applied identical strategy both times: GDP first, migration, then
+year=2023 filter on both. The temporal disambiguation appears to be a stable
+reasoning pattern for this model on this question type.
 
 ---
 
@@ -188,20 +216,23 @@ When the reasoning fails, the symbolic layer preserves the trace but cannot fix 
 
 ## Hypothesis Verdict
 
-**Supported.**
-
-All three models diverged on this cross-metric question:
+**Supported across both runs.**
 
 | Dimension | Diverged? | Evidence |
 |---|---|---|
-| Query order | Yes | GPT-4o-mini reversed it |
+| Query order | Yes | GPT-4o-mini changed order between runs |
 | Scope (top_n) | Yes | 20 vs 100 |
-| Temporal filter | Yes | Sonnet added year=2023; others did not |
-| Tool call count | Yes | 7 vs 7 vs 9 |
-| Correctness | Yes | wrong / partial / correct |
+| Temporal filter | Yes | Sonnet consistent; Haiku stochastic; GPT-4o-mini never |
+| Tool call count | Yes | 7 vs 7–9 vs 9 |
+| Correctness | Yes | wrong / stochastic / stable-correct |
 
 Each failure is traceable to a specific reasoning decision at the cross-metric gap —
 not to bad data, not to bad tools, not to a bad pipeline.
+
+The two-run study adds a new dimension: **stability**.
+Divergence is not just across models — it is across runs of the same model.
+GPT-4o-mini and Haiku are stochastic at this reasoning boundary.
+Sonnet is not.
 
 ---
 
