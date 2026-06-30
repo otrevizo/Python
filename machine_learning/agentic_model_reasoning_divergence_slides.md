@@ -79,80 +79,80 @@ That is where divergence enters.
 
 ---
 
-## GPT-4o-mini — 0 / 3 Correct, Different Failure Every Run
+## GPT-4o-mini — 0 / 3 Correct
 
-**Run 1** — migration first, no year → Hong Kong SAR (357.14) ❌
-```
--> query_product({'business_name': 'net_migration_rate', 'top_n': 20})  ← FIRST
--> query_product({'business_name': 'gdp', 'top_n': 20})
-```
+| | Run 1 | Run 2 | Run 3 |
+|---|---|---|---|
+| **Tool calls** | 7 | 7 | 6 |
+| **Load order** | UN_WPP → WB_GDP | UN_WPP → WB_GDP | UN_WPP → WB_GDP |
+| **Product name** | GDP_Migration_Data | GDP_Migration_Data | Merged_GDP_and_Migration |
+| **Query 1** | migration (top_n=20) | gdp (top_n=20) | migration (top_n=20) |
+| **Query 2** | gdp (top_n=20) | migration (top_n=20) | *(stopped — no GDP query)* |
+| **Year filter** | none | none | none |
+| **Answer** | Hong Kong SAR (357.14) | USA (2.84) | Hong Kong SAR (357.14) |
 
-**Run 2** — GDP first, no year → USA (2.84) ❌
-```
--> query_product({'business_name': 'gdp', 'top_n': 20})                 ← fixed order
--> query_product({'business_name': 'net_migration_rate', 'top_n': 20})  ← still no year
-```
+**What varied:** Query order flipped between runs. Product name changed in Run 3.
+Tool call count dropped by 1 in Run 3.
 
-**Run 3** — migration first, skipped GDP query entirely → Hong Kong SAR (357.14) ❌
-```
--> query_product({'business_name': 'net_migration_rate', 'top_n': 20})  ← only query
-```
-*(6 tool calls total — GDP was never queried)*
+**What was consistent:** Load order always UN_WPP first. No year filter ever.
 
-Three runs. Three different tool sequences. One consistent failure: **no year filter.**
-Without `year=2023`, queries return top-N across all years 1961–2023.
-The model never inferred that "top 20 GDP" implies a specific year context.
+**Run 3 detail:** The model loaded and merged the World Bank GDP data — it was
+in the registry and ready to use. It then queried only migration rate and stopped.
+It reported Hong Kong SAR without checking whether it is in the GDP top 20.
+It trusted prior knowledge instead of querying the data it had just prepared.
 
 ---
 
-## Haiku — Stochastic but Converging (2 / 3 Correct)
+## Haiku — 2 / 3 Correct, Converging
 
-**Run 1** — GDP first, no year filter → confused, hedged Canada ⚠️
-```
--> query_product({'business_name': 'gdp', 'top_n': 20})
--> query_product({'business_name': 'net_migration_rate', 'top_n': 100})  ← no year
-```
+| | Run 1 | Run 2 | Run 3 |
+|---|---|---|---|
+| **Tool calls** | 7 | 9 | 8 |
+| **Load order** | WB_GDP → UN_WPP | WB_GDP → UN_WPP | WB_GDP → UN_WPP |
+| **Product name** | GDP_MIGRATION | gdp_migration | gdp_migration |
+| **Query 1** | gdp (top_n=20) | gdp (top_n=20) | gdp (top_n=20) |
+| **Query 2** | migration (top_n=100) | migration (top_n=20) | migration (top_n=20) |
+| **Query 3** | *(stopped)* | gdp (year=2023, top_n=20) | migration (year=2023, top_n=50) |
+| **Query 4** | | migration (year=2023, top_n=100) | *(stopped)* |
+| **Year filter** | none | 2023 on both metrics | 2023 on 2nd migration query only |
+| **Answer** | Confused / hedged Canada | Canada — full ranked table | Canada |
 
-**Run 2** — GDP first, added year=2023 → Canada, full ranked table ✅
-```
--> query_product({'business_name': 'gdp', 'year': 2023, 'top_n': 20})
--> query_product({'business_name': 'net_migration_rate', 'year': 2023, 'top_n': 100})
-```
+**What varied:** Tool call count (7→9→8). Product name casing changed after Run 1.
+top_n for migration differed each run (100, 20+100, 20+50). Run 2 re-queried both
+metrics with year=2023; Run 3 re-queried only migration.
 
-**Run 3** — GDP first, added year=2023 → Canada ✅
-```
--> query_product({'business_name': 'gdp', 'top_n': 20})
--> query_product({'business_name': 'net_migration_rate', 'top_n': 20})
--> query_product({'business_name': 'net_migration_rate', 'year': 2023, 'top_n': 50})  ← added
-```
+**What was consistent:** Load order always WB_GDP first — unique among the three models
+(GPT-4o-mini and Sonnet always loaded UN_WPP first). GDP always queried before migration.
 
-Run 1 was the outlier. Once Haiku discovered the year=2023 strategy in Run 2,
-it applied it again in Run 3 — different top_n (50 vs 100) but same temporal anchor.
-Capable, and converging toward reliability.
+**The convergence:** Run 1 had no year filter and failed. Once the year=2023 strategy
+appeared in Run 2 it held in Run 3. Run 1 was the outlier; Runs 2–3 show a pattern.
 
 ---
 
-## Sonnet — Stable and Self-Optimising (3 / 3 Correct)
+## Sonnet — 3 / 3 Correct, Self-Optimising
 
-**Run 1 & 2** — GDP first, exploratory migration query, then year=2023 on both (9 calls)
-```
--> query_product({'business_name': 'gdp', 'top_n': 20})
--> query_product({'business_name': 'net_migration_rate', 'top_n': 20})           ← explore
--> query_product({'business_name': 'net_migration_rate', 'top_n': 20, 'year': 2023})
--> query_product({'business_name': 'gdp', 'top_n': 20, 'year': 2023})
-```
+| | Run 1 | Run 2 | Run 3 |
+|---|---|---|---|
+| **Tool calls** | 9 | 9 | 7 |
+| **Load order** | UN_WPP → WB_GDP | UN_WPP → WB_GDP | UN_WPP → WB_GDP |
+| **Product name** | gdp_migration_product | population_gdp_product | gdp_migration_product |
+| **Query 1** | gdp (top_n=20) | gdp (top_n=20) | gdp (top_n=20) |
+| **Query 2** | migration (top_n=20) | migration (top_n=20) | migration (year=2023, top_n=20) |
+| **Query 3** | migration (year=2023, top_n=20) | migration (year=2023, top_n=20) | *(stopped)* |
+| **Query 4** | gdp (year=2023, top_n=20) | gdp (year=2023, top_n=20) | |
+| **Year filter** | added in queries 3 & 4 | added in queries 3 & 4 | applied directly in query 2 |
+| **Answer** | Canada +11.04 | Canada +11.04 | Canada +11.04 |
 
-**Run 3** — GDP first, migration year=2023 directly — no exploratory step (7 calls)
-```
--> query_product({'business_name': 'gdp', 'top_n': 20})
--> query_product({'business_name': 'net_migration_rate', 'top_n': 20, 'year': 2023})  ← direct
-```
+**What varied:** Product name stochastic (gdp_migration_product / population_gdp_product / gdp_migration_product).
+Tool calls dropped from 9 to 7 in Run 3. Exploratory unfiltered migration query
+present in Runs 1–2, skipped in Run 3.
 
-**Answer:** Canada — +11.04 per 1,000 (2023) ✅ in all three runs.
+**What was consistent:** Load order always UN_WPP first. GDP always queried first.
+year=2023 applied every run. Answer identical across all three runs.
 
-Sonnet skipped the exploratory unfiltered query in Run 3 — going straight to
-`year=2023` on the first migration call. Same correct answer, fewer tool calls.
-The temporal disambiguation strategy is stable and becoming more efficient.
+**The optimisation:** Runs 1–2 issued an exploratory migration query without year filter,
+then re-queried with year=2023. Run 3 went straight to year=2023 on the first migration
+call — 2 fewer tool calls, same correct answer. The strategy is stable and tightening.
 
 ---
 
