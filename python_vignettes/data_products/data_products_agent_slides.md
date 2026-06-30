@@ -20,8 +20,8 @@ style: |
 ### A Hybrid Architecture for Dynamic Data Composition
 
 Oscar Trevizo
-Harvard Extension School — Graduate Data Science Program
-`python_vignettes/data_products/`
+Harvard Extension School — Graduate Certificate in Data Science (2023)
+Independent project · `python_vignettes/data_products/`
 
 ---
 

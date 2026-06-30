@@ -1,0 +1,83 @@
+{
+  "metadata": {
+    "name": "Store Sales Demo",
+    "description": "Synthetic store-sales data for data_product_lib tutorial",
+    "domain": "Sales",
+    "owner": "Oscar Trevizo",
+    "source": "Synthetic \u2014 generated in-notebook",
+    "source_url": "",
+    "license": "N/A",
+    "version": "1.0",
+    "refresh_frequency": "One-time demo",
+    "created_at": "2026-06-29T15:20:54.168938+00:00"
+  },
+  "schema": {
+    "region": "object",
+    "product": "object",
+    "year": "int64",
+    "units_sold": "int64",
+    "revenue_usd": "float64"
+  },
+  "semantic_layer": {
+    "revenue": {
+      "column": "revenue_usd",
+      "unit": "USD",
+      "description": "Total sales revenue in US dollars",
+      "source_system": null
+    },
+    "units": {
+      "column": "units_sold",
+      "unit": "count",
+      "description": "Number of units sold",
+      "source_system": null
+    },
+    "sales_year": {
+      "column": "year",
+      "unit": "year",
+      "description": "Calendar year of the sale",
+      "source_system": null
+    }
+  },
+  "quality": {
+    "row_count": 21,
+    "column_count": 5,
+    "completeness_pct": {
+      "region": 100.0,
+      "product": 100.0,
+      "year": 100.0,
+      "units_sold": 100.0,
+      "revenue_usd": 100.0
+    },
+    "freshness": "2026-06-29T15:20:54.168938+00:00"
+  },
+  "lineage": [
+    {
+      "step": "1-load",
+      "operation": "generate_synthetic",
+      "input_shape": [
+        0,
+        0
+      ],
+      "output_shape": [
+        30,
+        5
+      ],
+      "notes": "np.random.default_rng(seed=42), n=30",
+      "timestamp": "2026-06-29T15:21:02.719951"
+    },
+    {
+      "step": "2-filter",
+      "operation": "year_filter",
+      "input_shape": [
+        30,
+        5
+      ],
+      "output_shape": [
+        21,
+        5
+      ],
+      "notes": "year >= 2023",
+      "timestamp": "2026-06-29T15:21:02.721234"
+    }
+  ]
+}

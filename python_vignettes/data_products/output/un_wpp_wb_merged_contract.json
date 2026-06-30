@@ -1,0 +1,171 @@
+{
+  "metadata": {
+    "name": "UN WPP + World Bank \u2014 Demographics and GDP",
+    "description": "Country-year panel merging UN WPP demographics and World Bank GDP indicators, 1961\u20132023",
+    "domain": "Demographics / Economics",
+    "owner": "Oscar Trevizo",
+    "source": "UN WPP 2024 + World Bank WDI",
+    "source_url": "https://population.un.org/wpp/ | https://databank.worldbank.org/",
+    "license": "CC BY 3.0 IGO (WPP) + CC BY 4.0 (WB)",
+    "version": "1.0",
+    "refresh_frequency": "Annual (WB) / Every 2 years (WPP)",
+    "created_at": "2026-06-24T13:32:12.503679+00:00"
+  },
+  "schema": {
+    "Location": "object",
+    "ISO3": "object",
+    "ISO2": "object",
+    "LocType": "object",
+    "Year": "int64",
+    "Population_Ks": "float64",
+    "MedAge": "float64",
+    "PopulationGrowthRate": "float64",
+    "FertilityRate_births_per_woman": "float64",
+    "LifeExpectancy": "float64",
+    "NetMigrants_Ks": "float64",
+    "NetMigrationRate_per_Kpop": "float64",
+    "ReceivesMigrants": "int64",
+    "ImmigrantsEmigrants": "object",
+    "GDP_USD": "float64",
+    "GDP_growth_pct": "float64"
+  },
+  "semantic_layer": {
+    "net_migration_rate": {
+      "column": "NetMigrationRate_per_Kpop",
+      "unit": "per 1,000 population",
+      "description": "Net migrants per 1,000 residents",
+      "source_system": "UN WPP 2024"
+    },
+    "net_migrants": {
+      "column": "NetMigrants_Ks",
+      "unit": "thousands of people",
+      "description": "Net number of migrants",
+      "source_system": "UN WPP 2024"
+    },
+    "population": {
+      "column": "Population_Ks",
+      "unit": "thousands",
+      "description": "Total population, as of 1 July",
+      "source_system": "UN WPP 2024"
+    },
+    "fertility_rate": {
+      "column": "FertilityRate_births_per_woman",
+      "unit": "births per woman",
+      "description": "Total fertility rate",
+      "source_system": "UN WPP 2024"
+    },
+    "life_expectancy": {
+      "column": "LifeExpectancy",
+      "unit": "years",
+      "description": "Life expectancy at birth",
+      "source_system": "UN WPP 2024"
+    },
+    "gdp": {
+      "column": "GDP_USD",
+      "unit": "constant USD",
+      "description": "GDP in constant US dollars (NY.GDP.MKTP.KD)",
+      "source_system": "World Bank WDI"
+    },
+    "gdp_growth": {
+      "column": "GDP_growth_pct",
+      "unit": "% per year",
+      "description": "GDP growth rate (NY.GDP.MKTP.KD.ZG)",
+      "source_system": "World Bank WDI"
+    }
+  },
+  "quality": {
+    "row_count": 10920,
+    "column_count": 16,
+    "completeness_pct": {
+      "Location": 100.0,
+      "ISO3": 100.0,
+      "ISO2": 99.61,
+      "LocType": 100.0,
+      "Year": 100.0,
+      "Population_Ks": 100.0,
+      "MedAge": 100.0,
+      "PopulationGrowthRate": 100.0,
+      "FertilityRate_births_per_woman": 100.0,
+      "LifeExpectancy": 100.0,
+      "NetMigrants_Ks": 100.0,
+      "NetMigrationRate_per_Kpop": 100.0,
+      "ReceivesMigrants": 100.0,
+      "ImmigrantsEmigrants": 100.0,
+      "GDP_USD": 100.0,
+      "GDP_growth_pct": 100.0
+    },
+    "freshness": "2026-06-24T13:32:12.503679+00:00"
+  },
+  "lineage": [
+    {
+      "step": "dp1/1-load",
+      "operation": "load_un_wpp",
+      "input_shape": [
+        0,
+        0
+      ],
+      "output_shape": [
+        18711,
+        14
+      ],
+      "notes": "Estimates sheet, skiprows=16, years 1961\u20132023",
+      "timestamp": "2026-06-24T13:32:12.503492"
+    },
+    {
+      "step": "dp1/2-filter",
+      "operation": "filter_countries",
+      "input_shape": [
+        18711,
+        14
+      ],
+      "output_shape": [
+        14931,
+        14
+      ],
+      "notes": "LocType == Country only",
+      "timestamp": "2026-06-24T13:32:12.503506"
+    },
+    {
+      "step": "dp1/3-clean",
+      "operation": "clean_types",
+      "input_shape": [
+        14931,
+        14
+      ],
+      "output_shape": [
+        14931,
+        14
+      ],
+      "notes": "pd.to_numeric on 7 numeric columns",
+      "timestamp": "2026-06-24T13:32:12.503513"
+    },
+    {
+      "step": "dp2/1-load",
+      "operation": "load_wb_gdp",
+      "input_shape": [
+        0,
+        0
+      ],
+      "output_shape": [
+        13805,
+        4
+      ],
+      "notes": "GDP_USD + GDP_growth_pct, wide\u2192long, years 1961\u20132023",
+      "timestamp": "2026-06-24T13:32:12.503521"
+    },
+    {
+      "step": "merge",
+      "operation": "inner_join",
+      "input_shape": [
+        14931,
+        14
+      ],
+      "output_shape": [
+        10920,
+        16
+      ],
+      "notes": "keys: ISO3+Year  |  DP2 input: (13805, 4)",
+      "timestamp": "2026-06-24T13:32:12.503536"
+    }
+  ]
+}

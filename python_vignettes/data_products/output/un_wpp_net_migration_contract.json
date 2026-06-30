@@ -1,0 +1,127 @@
+{
+  "metadata": {
+    "name": "UN WPP Net Migration",
+    "description": "Country-year panel of UN WPP 2024 demographic indicators, 1961\u20132023",
+    "domain": "Demographics",
+    "owner": "Oscar Trevizo",
+    "source": "UN World Population Prospects 2024",
+    "source_url": "https://population.un.org/wpp/",
+    "license": "CC BY 3.0 IGO",
+    "version": "1.0",
+    "refresh_frequency": "Every 2 years (UN WPP release cycle)",
+    "created_at": "2026-06-24T12:21:22.900100+00:00"
+  },
+  "schema": {
+    "Location": "object",
+    "ISO3": "object",
+    "ISO2": "object",
+    "LocType": "object",
+    "Year": "int64",
+    "Population_Ks": "float64",
+    "MedAge": "float64",
+    "PopulationGrowthRate": "float64",
+    "FertilityRate_births_per_woman": "float64",
+    "LifeExpectancy": "float64",
+    "NetMigrants_Ks": "float64",
+    "NetMigrationRate_per_Kpop": "float64",
+    "ReceivesMigrants": "int64",
+    "ImmigrantsEmigrants": "object"
+  },
+  "semantic_layer": {
+    "net_migration_rate": {
+      "column": "NetMigrationRate_per_Kpop",
+      "unit": "per 1,000 population",
+      "description": "Net migrants per 1,000 residents, UN WPP",
+      "source_system": null
+    },
+    "net_migrants": {
+      "column": "NetMigrants_Ks",
+      "unit": "thousands of people",
+      "description": "Net number of migrants",
+      "source_system": null
+    },
+    "population": {
+      "column": "Population_Ks",
+      "unit": "thousands",
+      "description": "Total population, as of 1 July",
+      "source_system": null
+    },
+    "fertility_rate": {
+      "column": "FertilityRate_births_per_woman",
+      "unit": "births per woman",
+      "description": "Total fertility rate",
+      "source_system": null
+    },
+    "life_expectancy": {
+      "column": "LifeExpectancy",
+      "unit": "years",
+      "description": "Life expectancy at birth",
+      "source_system": null
+    }
+  },
+  "quality": {
+    "row_count": 14931,
+    "column_count": 14,
+    "completeness_pct": {
+      "Location": 100.0,
+      "ISO3": 100.0,
+      "ISO2": 99.58,
+      "LocType": 100.0,
+      "Year": 100.0,
+      "Population_Ks": 100.0,
+      "MedAge": 100.0,
+      "PopulationGrowthRate": 100.0,
+      "FertilityRate_births_per_woman": 100.0,
+      "LifeExpectancy": 100.0,
+      "NetMigrants_Ks": 100.0,
+      "NetMigrationRate_per_Kpop": 100.0,
+      "ReceivesMigrants": 100.0,
+      "ImmigrantsEmigrants": 100.0
+    },
+    "freshness": "2026-06-24T12:21:22.900100+00:00"
+  },
+  "lineage": [
+    {
+      "step": "1-load",
+      "operation": "load_un_wpp",
+      "input_shape": [
+        0,
+        0
+      ],
+      "output_shape": [
+        18711,
+        14
+      ],
+      "notes": "Estimates sheet, skiprows=16, years 1961\u20132023",
+      "timestamp": "2026-06-24T12:21:16.016751"
+    },
+    {
+      "step": "2-filter",
+      "operation": "filter_countries",
+      "input_shape": [
+        18711,
+        14
+      ],
+      "output_shape": [
+        14931,
+        14
+      ],
+      "notes": "LocType == Country only",
+      "timestamp": "2026-06-24T12:21:16.018096"
+    },
+    {
+      "step": "3-clean",
+      "operation": "clean_types",
+      "input_shape": [
+        14931,
+        14
+      ],
+      "output_shape": [
+        14931,
+        14
+      ],
+      "notes": "pd.to_numeric on 7 numeric columns",
+      "timestamp": "2026-06-24T12:21:16.022132"
+    }
+  ]
+}
