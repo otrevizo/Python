@@ -380,21 +380,25 @@ Schema validation                 Scope inference
 **Hypothesis:** LLM agents diverge on cross-metric reasoning questions.
 Same question. Same tools. Same data. Three models. Run three times.
 
-| Model | Run 1 | Run 2 | Run 3 | Correct rate |
+| Model | Calls | Load order | Year filter | Correct rate |
 |---|---|---|---|---|
-| GPT-4o-mini | NO | NO | NO | **0 / 3** |
-| Haiku | PARTIAL | YES | YES | **2 / 3** |
-| Sonnet | YES | YES | YES | **3 / 3** |
+| GPT-4o-mini | 6–7 | UN_WPP → WB_GDP (consistent) | Never | **0 / 3** |
+| Haiku | 7–9 | WB_GDP → UN_WPP (consistent, unique) | Run 1: no · Runs 2–3: yes | **2 / 3** |
+| Sonnet | 7–9 | UN_WPP → WB_GDP (consistent) | Every run | **3 / 3** |
 
-**Finding:** Divergence confirmed across all three runs. GPT-4o-mini never
-applied a year filter — consistently wrong. Haiku converged to the correct
-strategy by Run 2. Sonnet was stable and got more efficient over runs.
+**Key behavioral details:**
+- **GPT-4o-mini** — query order and product naming stochastic; no year filter ever.
+  Run 3: loaded GDP data into the registry, then never queried it — answered from prior knowledge.
+- **Haiku** — only model to load WB_GDP first; GDP always queried before migration (correct).
+  Converged to year=2023 strategy by Run 2 and held it in Run 3.
+- **Sonnet** — product naming stochastic; strategy stable. Self-optimised: 9→9→7 tool calls
+  as it dropped the exploratory unfiltered migration query in Run 3.
 
 The symbolic scaffolding returned identical correct data in every run.
 The neural reasoning determined the outcome.
 
 > See `machine_learning/agentic_model_reasoning_divergence.ipynb`
-> and `agentic_model_reasoning_divergence_slides.md`
+> and `agentic_model_reasoning_divergence_slides.md` for full per-model profiles.
 
 ---
 
