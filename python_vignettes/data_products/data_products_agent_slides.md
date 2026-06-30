@@ -452,8 +452,9 @@ Completes the 2×2 matrix:
 - **Interaction is superadditive:** governed tool alone 2/3 · semantic alone 4/9 · both together 3/3.
   Neither is sufficient without the other.
 
-**Revised conclusion:** The semantic layer IS necessary — but only when the tool is also governed.
-Experiment 2's "useful but not necessary" finding was conditional on a poorly structured tool.
+**Revised conclusion (2 runs):** The tool structure is the primary driver (+33 ppts avg).
+The semantic layer adds no detectable benefit when the tool is governed (5/6 vs 5/6 after 2 runs).
+GPT-4o-mini's 2022 year bias persists in both naming conditions — naming-independent failure.
 
 > See `machine_learning/agentic_cross_metric_tool.ipynb`
 > and `agentic_cross_metric_tool_slides.md` for the full 2×2 analysis.
