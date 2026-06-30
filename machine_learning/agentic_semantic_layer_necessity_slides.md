@@ -72,94 +72,87 @@ query_raw(column_name='NetMigrationRate_per_Kpop', year=2023, top_n=20)
 | **Condition B** | `list_columns()` + `query_raw(column_name=...)` — no semantic layer |
 | **Controlled** | Data, pipeline, merge, PRODUCT_REGISTRY, question |
 | **Variable** | Presence or absence of the semantic layer |
-| **Runs** | 12 total — 3 models × 2 conditions × 2 runs |
+| **Runs** | 18 total — 3 models × 2 conditions × 3 runs |
 | **Verified answer** | Canada, +11.039 per 1,000 population (2023, UN WPP) |
 
 ---
 
-## Results — At a Glance (2 runs)
+## Results — At a Glance (3 runs)
 
-| | Cond A Run 1 | Cond A Run 2 | Cond B Run 1 | Cond B Run 2 |
-|---|---|---|---|---|
-| **GPT-4o-mini** | ❌ China (1964) | ❌ Kuwait (1991) | ❌ UAE (2007) | ❌ UAE (2023) |
-| **Haiku** | ✅ Canada | ✅ Canada | ✅ Canada | ✅ Canada |
-| **Sonnet** | ❌ Singapore | ✅ Canada | ❌ Singapore | ✅ Canada |
+| | Cond A R1 | Cond A R2 | Cond A R3 | Cond B R1 | Cond B R2 | Cond B R3 |
+|---|---|---|---|---|---|---|
+| **GPT-4o-mini** | ❌ China | ❌ Kuwait | ❌ UAE | ❌ UAE | ❌ UAE | ❌ inconclusive |
+| **Haiku** | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| **Sonnet** | ❌ Singapore | ✅ | ❌ USA | ❌ Singapore | ✅ | ✅ |
 
-**Cumulative correctness:** GPT-4o-mini 0/4 · Haiku 4/4 · Sonnet 2/4
+**Cumulative:** GPT-4o-mini **0/6** · Haiku **6/6** · Sonnet **3/6**
 
 > The semantic layer did not change *who* got the right answer.
-> Sonnet's correction in Run 2 confirms its year filter decision is probabilistic.
+> Sonnet alternates wrong/right/wrong in Condition A — the year filter is a coin flip.
 > But the tool call traces reveal something more important.
 
 ---
 
-## GPT-4o-mini — Behavioral Profile (0/4 correct)
+## GPT-4o-mini — Behavioral Profile (0/6 correct)
 
-| | Cond A Run 1 | Cond A Run 2 | Cond B Run 1 | Cond B Run 2 |
-|---|---|---|---|---|
-| **Tool calls** | 6 | 7 | 10 | 8 |
-| **Merge step** | ✅ | ❌ skipped | ✅ | ❌ skipped |
-| **Semantic leakage** | — | — | ✅ tried 'gdp' | ❌ none |
-| **Year filter** | None | None | None | Migration only |
-| **Answer** | China (1964) | Kuwait (1991) | UAE (2007) | UAE (2023) |
+| | Cond A R1 | Cond A R2 | Cond A R3 | Cond B R1 | Cond B R2 | Cond B R3 |
+|---|---|---|---|---|---|---|
+| **Tool calls** | 6 | 7 | 6 | 10 | 8 | 10 |
+| **Merge step** | ✅ | ❌ skipped | ✅ partial* | ✅ | ❌ skipped | ✅ |
+| **Leakage** | — | — | — | ✅ | ❌ | ✅ hybrid† |
+| **Year filter** | None | None | None | None | Migration | None |
+| **Answer** | China (1964) | Kuwait (1991) | UAE (2007) | UAE (2007) | UAE (2023) | inconclusive |
 
-**Two distinct failure modes — both probabilistic:**
+*Run 3A: called `merge_sources()` then queried GDP from `WORLD_BANK_GDP` directly, not from merged product.  
+†Run 3B: tried `'net_migration_rate_per_Kpop'` — a hallucinated hybrid (business name pattern + raw suffix).
 
-**1. No year filter:** Without `year=2023`, all-time peaks dominate — China 1964 (357.14), Kuwait 1991 (340.85).
-
-**2. Skipped merge (Run 2, both conditions):** Queried source products separately, then reasoned
-across disconnected result sets. UAE appeared at top of 2023 UN_WPP migration — but UAE is not in
-the top-20 GDP list the model had seen from a separate WORLD_BANK_GDP query.
-
-**Semantic leakage is also probabilistic** — present in Run 1, absent in Run 2.
+**Year filter never applied.** Merge discipline is inconsistent.
+Leakage is probabilistic — and Run 3 introduced a new variant: a hallucinated column name
+that is neither the semantic business name nor the correct raw name.
 
 ---
 
-## Haiku — Behavioral Profile (4/4 correct)
+## Haiku — Behavioral Profile (6/6 correct)
 
-| | Cond A Run 1 | Cond A Run 2 | Cond B Run 1 | Cond B Run 2 |
-|---|---|---|---|---|
-| **Tool calls** | 8 | 8 | 9 | 7 |
-| **Load order** | WB_GDP → UN_WPP | UN_WPP → WB_GDP | WB_GDP → UN_WPP | WB_GDP → UN_WPP |
-| **Merge step** | ✅ | ✅ | ✅ | ✅ |
-| **Semantic leakage** | — | — | ✅ tried 'gdp' | ✅ tried 'gdp' |
-| **Year filter** | Round 2 | Round 2 | Round 2 | Applied directly |
-| **Answer** | ✅ Canada | ✅ Canada | ✅ Canada | ✅ Canada |
+| | Cond A R1 | Cond A R2 | Cond A R3 | Cond B R1 | Cond B R2 | Cond B R3 |
+|---|---|---|---|---|---|---|
+| **Tool calls** | 8 | 8 | 6 | 9 | 7 | 7 |
+| **Merge step** | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| **Leakage** | — | — | — | ✅ 'gdp' | ✅ 'gdp' | ❌ none |
+| **Year filter** | Round 2 | Round 2 | Direct | Round 2 | Direct | Direct |
+| **Answer** | ✅ Canada | ✅ Canada | ✅ Canada | ✅ Canada | ✅ Canada | ✅ Canada |
 
-**Most reliable model across all conditions and runs.**
+**Only model with a perfect record — 6/6 across all conditions and runs.**
 
-Two-round strategy (broad first → year-filtered second) is consistent across Condition A.
-In Condition B Run 2, applied `year=2023` directly — more efficient (7 calls vs 9).
+**Consistent strategy:** always merges, always applies `year=2023`, always gets Canada.
+Efficiency improving — Condition A Run 3 is down to 6 calls (applied year directly, no exploratory round).
 
-**Semantic leakage is consistent in Condition B** — tried `'gdp'` as a raw column name in
-both runs, recovered via error message each time. The semantic layer aligns to Haiku's priors.
-
-Load order is not perfectly stable (UN_WPP-first appeared in Condition A Run 2) but correctness
-was unaffected — merge order does not change the inner join result.
+**Leakage trending down in Condition B** — present in Runs 1 and 2, absent in Run 3.
+When leakage occurs, Haiku recovers via the error message and still gets the right answer.
+The semantic layer would eliminate the recovery cost entirely.
 
 ---
 
-## Sonnet — Behavioral Profile (2/4 correct)
+## Sonnet — Behavioral Profile (3/6 correct)
 
-| | Cond A Run 1 | Cond A Run 2 | Cond B Run 1 | Cond B Run 2 |
-|---|---|---|---|---|
-| **Tool calls** | 6 | 8 | 7 | 9 |
-| **Merge step** | ✅ | ✅ | ✅ | ✅ |
-| **Semantic leakage** | — | — | ❌ none | ❌ none |
-| **Round 1** | top_n=200, no year | top_n=20, no year | top_n=200, no year | top_n=200, no year |
-| **Round 2** | — (stopped) | top_n=20, year=2023 ✅ | — (stopped) | top_n=500, year=2023 ✅ |
-| **Year filter** | Never | Round 2 | Never | Round 2 |
-| **Answer** | ❌ Singapore (2007) | ✅ Canada (2023) | ❌ Singapore (2007) | ✅ Canada (2023) |
+| | Cond A R1 | Cond A R2 | Cond A R3 | Cond B R1 | Cond B R2 | Cond B R3 |
+|---|---|---|---|---|---|---|
+| **Tool calls** | 6 | 8 | 6 | 7 | 9 | 9 |
+| **Merge step** | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| **Leakage** | — | — | — | ❌ none | ❌ none | ❌ none |
+| **Round 2 (year)** | ❌ stopped | ✅ year=2023 | ❌ stopped | ❌ stopped | ✅ year=2023 | ✅ year=2023 |
+| **Answer** | ❌ Singapore | ✅ Canada | ❌ USA | ❌ Singapore | ✅ Canada | ✅ Canada |
 
-**Year filter decision is probabilistic — the decisive variable.**
+**Year filter is the decisive probabilistic variable — nothing else changes.**
 
-In both runs where Sonnet was wrong, it stopped after one wide query with no year filter.
-In both runs where it was correct, it added a second round with `year=2023`.
-The failure mode and the correction are identical across conditions — the semantic layer
-was irrelevant to both.
+Condition A pattern: wrong / right / wrong — alternating.
+Condition B pattern: wrong / right / right — tentative improvement (2/3 vs 1/3).
 
-**No semantic leakage in Condition B** — Sonnet calls `list_columns()` and picks correct
-raw column names on the first attempt, in both runs. Most disciplined discovery of the three models.
+**No semantic leakage in Condition B across all 3 runs** — Sonnet always calls `list_columns()`
+and picks the correct raw column names on the first attempt. Most disciplined discovery of the three models.
+
+Run 3A wrong answer was *USA* (not Singapore) — the GDP query returned only USA and China
+as all-time records; Sonnet reasoned USA > China on migration without checking actual rates.
 
 ---
 
@@ -182,32 +175,38 @@ GPT-4o-mini (Condition B):
 2. The semantic layer aligns the tool interface to what models already know
 3. Without it, models must pay a **discovery tax**: extra calls, failed attempts, error recovery
 
-**Leakage is model-dependent and probabilistic across 2 runs:**
+**Leakage is model-dependent and probabilistic across 3 runs:**
 
-| Model | Run 1 leakage | Run 2 leakage | Pattern |
-|---|---|---|---|
-| GPT-4o-mini | ✅ | ❌ | Probabilistic |
-| Haiku | ✅ | ✅ | Consistent |
-| Sonnet | ❌ | ❌ | Never |
+| Model | Run 1 | Run 2 | Run 3 | Pattern |
+|---|---|---|---|---|
+| GPT-4o-mini | ✅ | ❌ | ✅ hybrid* | Probabilistic; Run 3 hallucinated a blended name |
+| Haiku | ✅ | ✅ | ❌ | Mostly consistent; trending clean |
+| Sonnet | ❌ | ❌ | ❌ | Never — always uses `list_columns()` correctly |
 
-**Sonnet never shows leakage** — calls `list_columns()` and picks correctly both runs.
+*Run 3: tried `'net_migration_rate_per_Kpop'` — neither the semantic name nor the raw column name.
+A hallucinated hybrid: business name prefix + raw column suffix. Failed; recovered correctly.
+
+**Sonnet never shows leakage** — calls `list_columns()` and picks correctly all 3 runs.
 
 ---
 
-## The Discovery Tax (averaged across 2 runs)
+## The Discovery Tax (averaged across 3 runs)
 
 Extra tool calls imposed by removing the semantic layer:
 
 | Model | Cond A avg | Cond B avg | Extra calls | Pattern |
 |---|---|---|---|---|
-| GPT-4o-mini | 6.5 | 9.0 | **+2.5** | Leakage probabilistic; skipped merge in Run 2 |
-| Haiku | 8.0 | 8.0 | **0** | Leakage consistent, but recovery very fast |
-| Sonnet | 7.0 | 8.0 | **+1** | `list_columns()` call only — no leakage |
+| GPT-4o-mini | 6.3 | 9.3 | **+3.0** | Persistent — leakage and merge failures add up |
+| Haiku | 7.3 | 7.7 | **+0.4** | Near zero — fast recovery masks leakage cost |
+| Sonnet | 6.7 | 8.3 | **+1.7** | `list_columns()` + second query round |
 
-**The tax is real but smaller than Run 1 suggested.**
+**The tax is persistent across 3 runs for every model.**
 
-Haiku's discovery overhead dropped to zero on average because Run 2 was more efficient.
-GPT-4o-mini's overhead is inflated by the skipped-merge failure in Run 2, not just leakage.
+GPT-4o-mini carries the largest overhead — consistently 3+ extra calls in Condition B,
+driven by leakage failures and occasional merge-skip.
+
+Haiku averages near zero because it recovers from leakage quickly and its Condition B
+strategy (7 calls) is nearly as efficient as Condition A (7.3 calls).
 
 The semantic layer eliminates guessing failures and recovery overhead —
 in a production system, each extra round-trip is latency + token cost + failure risk.
@@ -232,10 +231,11 @@ UAE led the UN_WPP migration list but was absent from the GDP list seen.
 
 | Failure type | Probabilistic? | Can semantic layer fix it? |
 |---|---|---|
-| Wrong column name | Yes (leakage) | **Yes — by alignment** |
-| No year filter | Yes — Sonnet corrected in Run 2 | **No** |
-| Skipped merge step | Yes — new in Run 2 | **No** |
-| Wrong scope (top_n) | Yes | **No** |
+| Wrong column name (leakage) | Yes — GPT-4o-mini and Haiku intermittent | **Yes — by alignment** |
+| Hallucinated column name | Yes — GPT-4o-mini Run 3B only | **Yes — by alignment** |
+| No year filter | Yes — Sonnet and GPT-4o-mini intermittent | **No** |
+| Partial/skipped merge | Yes — GPT-4o-mini intermittent | **No** |
+| Inconclusive reasoning | Yes — GPT-4o-mini Run 3B | **Partially** |
 
 ---
 
@@ -246,16 +246,16 @@ UAE led the UN_WPP migration list but was absent from the GDP list seen.
 
 | Claim | Result |
 |---|---|
-| **Correctness** | Same across conditions — naming did not determine correctness in either run. |
-| **Efficiency** | Confirmed in Run 1; reduced in Run 2 — Haiku closed the gap completely. |
-| **Alignment** | Partially — Haiku shows consistent leakage; GPT-4o-mini probabilistic; Sonnet never. |
-| **Failure isolation** | ✅ Confirmed — year filter and skipped merge are naming-independent. |
+| **Correctness** | Same rate across conditions — naming is not the correctness driver (3 runs). |
+| **Efficiency** | ✅ Confirmed — Condition B costs 0.4–3.0 extra calls per model (persistent). |
+| **Alignment** | Confirmed for Haiku (mostly); probabilistic for GPT-4o-mini; never for Sonnet. |
+| **Failure isolation** | ✅ Confirmed — year filter, merge discipline, scope inference dominate. |
 
-**Verdict: Necessary but not sufficient — and the gap is smaller than Run 1 suggested.**
+**Verdict: Necessary but not sufficient — confirmed across 3 runs.**
 
 > The semantic layer is **necessary but not sufficient.**
-> It eliminates the naming discovery tax and aligns tool interfaces to model priors.
-> It cannot fix year filter failures, skipped merge steps, or scope inference errors.
+> It eliminates naming friction and aligns tool interfaces to model priors.
+> It cannot fix year filter failures, merge discipline, or scope inference errors.
 
 ---
 
@@ -307,27 +307,29 @@ model divergence collapses to zero regardless of year filter behavior.
 
 ---
 
-## Summary (2 runs)
+## Summary (3 runs)
 
 ```
 Experiment 2:  Do LLMs need a semantic layer?
-Same question · Same data · Same three models · 2 runs
+Same question · Same data · Same three models · 3 runs
 Two conditions: with and without the semantic layer
 
-Finding 1:  Correctness — GPT-4o-mini 0/4, Haiku 4/4, Sonnet 2/4.
+Finding 1:  Correctness — GPT-4o-mini 0/6, Haiku 6/6, Sonnet 3/6.
             Naming did not determine who got the right answer.
 
-Finding 2:  Discovery tax — real but variable. Averaged across 2 runs:
-            GPT-4o-mini +2.5 calls, Haiku 0, Sonnet +1.
+Finding 2:  Discovery tax is persistent — Condition B costs every model
+            more calls: GPT-4o-mini +3.0, Haiku +0.4, Sonnet +1.7 avg.
 
-Finding 3:  Semantic leakage is model-dependent and probabilistic.
-            Haiku: consistent. GPT-4o-mini: Run 1 only. Sonnet: never.
+Finding 3:  Semantic leakage is model-dependent.
+            Haiku: mostly consistent. GPT-4o-mini: probabilistic + hallucinated
+            hybrid name in Run 3B. Sonnet: never across all 6 Condition B runs.
 
-Finding 4:  Two independent failure modes — year filter and skipped merge —
-            both probabilistic, both naming-independent.
+Finding 4:  Core failure modes — year filter (GPT-4o-mini always, Sonnet
+            intermittent) and merge discipline (GPT-4o-mini intermittent) —
+            all naming-independent, all probabilistic.
 
-Finding 5:  Sonnet corrected itself in Run 2 (wrong → correct, both conditions).
-            The year filter decision is the decisive probabilistic variable.
+Finding 5:  Sonnet Condition B trending better (2/3) vs Condition A (1/3).
+            Tentative signal: raw names may prompt more methodical querying.
 
 Verdict:    Semantic layer is necessary but not sufficient.
             It closes the naming gap. It cannot close the reasoning gap.
