@@ -30,19 +30,35 @@ git config --list
 
 ---
 
-## Starting Out — Clone a Repo
+## Clone a New Repo
 
-Your local repos live in `~/GitHub/` — one subfolder per repo.
+Steps to bring a new GitHub repo down onto your machine for the first time. **Always use the SSH form, never HTTPS** — see below for why.
 
+**1. Navigate to your GitHub folder:**
 ```bash
-# Navigate to your GitHub folder
 cd ~/GitHub
+```
 
-# Clone a repo (creates a subfolder automatically)
-git clone https://github.com/username/repo-name.git
+**2. Clone using the SSH URL** (creates a subfolder automatically). Get this exact URL from the repo's GitHub page → green "Code" button → **"SSH" tab** (not "HTTPS", which is shown by default):
+```bash
+git clone git@github.com:otrevizo/repo-name.git
+```
 
-# Enter the repo
+**3. Enter the repo:**
+```bash
 cd repo-name
+```
+
+### Troubleshooting: "Invalid username or token. Password authentication is not supported for Git operations."
+
+This happens when you clone with the **HTTPS** URL (`https://github.com/otrevizo/repo-name.git`) and then type your actual GitHub account password at the prompt. GitHub retired plain password auth for git years ago — that prompt wants a Personal Access Token (PAT), not your password, and typing the password always fails with exactly this message.
+
+**Fix:** re-clone using the SSH URL above instead. Once SSH is set up (key uploaded to GitHub, added to Keychain), it authenticates silently — no prompt at all.
+
+**Already cloned via HTTPS and don't want to re-clone?** Switch the existing clone's remote to SSH instead:
+```bash
+git remote set-url origin git@github.com:otrevizo/repo-name.git
+git remote -v   # confirm both lines now start with git@github.com:
 ```
 
 ---
