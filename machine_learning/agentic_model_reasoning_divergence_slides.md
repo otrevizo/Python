@@ -18,6 +18,8 @@ style: |
 
 # Agentic Model Reasoning Divergence
 
+**Watch the Tech Talk:** [Same AI Prompt, Different Answers (YouTube)](https://youtu.be/iNfDLrHb7fw)
+
 ### A Hypothesis Test: Do LLMs Diverge on Cross-Metric Questions?
 
 Oscar Trevizo
