@@ -24,7 +24,8 @@ Walkthroughs of these notebooks are in the YouTube playlist
 
 | Notebook | Topic |
 |---|---|
-| [logistic_regression_vignette.ipynb](logistic_regression_vignette.ipynb) | Logistic regression with scikit-learn on the ISLP Default dataset (ISLR Ch. 4): S-curve, predict_proba, confusion matrix, precision/recall |
+| [logistic_regression_vignette.ipynb](logistic_regression_vignette.ipynb) | Logistic regression with scikit-learn on the ISLP Default dataset (ISLR Ch. 4): S-curve, predict_proba, confusion matrix, precision/recall, thresholds, multiple model and confounding |
+| [logistic_regression_decision_boundary_vignette.ipynb](logistic_regression_decision_boundary_vignette.ipynb) | The decision boundary: the line logistic regression draws between two classes, computed from coef_ and intercept_ (Iris) |
 | [univar_logistic_reg_LDA_QDA_classification_ISLR_Ch4.ipynb](univar_logistic_reg_LDA_QDA_classification_ISLR_Ch4.ipynb) | Univariate classification: logistic regression, LDA, QDA (ISLR Ch. 4) |
 | [multivar_logistic_reg_LDA_QDA_classification_ISLR_Ch4.ipynb](multivar_logistic_reg_LDA_QDA_classification_ISLR_Ch4.ipynb) | Multivariate classification: logistic regression, LDA, QDA (ISLR Ch. 4) |
 | [tree_rpart_classification_ISLR_Ch8_Credit.ipynb](tree_rpart_classification_ISLR_Ch8_Credit.ipynb) | Decision tree classification, Credit dataset (ISLR Ch. 8) |
