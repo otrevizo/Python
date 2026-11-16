@@ -7,6 +7,9 @@ Python notebooks on AI and machine learning topics, from fundamentals to applied
 Walkthroughs of these notebooks are in the YouTube playlist
 [AI and Machine Learning with Python](https://www.youtube.com/playlist?list=PLJgpRhj3_bvHVST9GVlT3_Su01bp_brLu).
 
+The notebooks built on camera, one per topic, are in
+[youtube_notebooks/](youtube_notebooks/), each with an Open in Colab link.
+
 ## Notebooks
 
 ### Regression
