@@ -23,6 +23,7 @@ Iris flowers (petal length and width), loaded with seaborn.
 | Notebook | Topic | Run |
 |---|---|---|
 | [lgr_setosa_vs_the_rest.ipynb](lgr_setosa_vs_the_rest.ipynb) | Setosa vs. the rest: explore the data, two classes, train / test split, fit, predict, score, and the decision boundary as y = mx + b | [Open in Colab](https://colab.research.google.com/github/otrevizo/Python/blob/main/machine_learning/youtube_notebooks/lgr_setosa_vs_the_rest.ipynb) |
+| [lgr_versicolor_vs_virginica.ipynb](lgr_versicolor_vs_virginica.ipynb) | Versicolor vs. virginica: two species that overlap, accuracy 0.85, the decision boundary, and the confusion matrix, by hand and with scikit-learn | [Open in Colab](https://colab.research.google.com/github/otrevizo/Python/blob/main/machine_learning/youtube_notebooks/lgr_versicolor_vs_virginica.ipynb) |
 
 ## Going deeper
 
